@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giriş Yap — 10BTV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>" />
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card-bg:#1e293b;
+      --text:#f1f5f9;
+      --text-muted:#94a3b8;
+      --accent:#3b82f6;
+      --border:#334155;
+      --danger:#ef4444;
+      --ok:#22c55e;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:2rem 1rem;
+    }
+    .container{max-width:900px;margin:0 auto;}
+    header{
+      text-align:center;
+      margin-bottom:2rem;
+      padding-bottom:1.5rem;
+      border-bottom:2px solid var(--border);
+      position:relative;
+    }
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      color:var(--text-muted);
+      text-decoration:none;
+      position:absolute;
+      left:0; top:0;
+      margin:1rem 0 0 0;
+      font-weight:700;
+      transition:.25s;
+    }
+    .back-link:hover{color:var(--accent);transform:translateX(-3px);} 
+    .title{font-size:2.1rem;font-weight:900;margin-bottom:.3rem;}
+
+    .card{
+      background:linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.05));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:1.6rem;
+      margin-top:1.4rem;
+    }
+    .form{
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
+      max-width:520px;
+      margin:1.1rem auto 0;
+    }
+    label{display:block;color:var(--text-muted);font-weight:800;margin-bottom:.4rem;font-size:.95rem;}
+    input{
+      width:100%;
+      padding:.85rem .95rem;
+      border-radius:14px;
+      background:rgba(30,41,59,0.85);
+      border:1px solid var(--border);
+      color:var(--text);
+      outline:none;
+      font-size:1rem;
+    }
+    input:focus{border-color:rgba(59,130,246,0.85);box-shadow:0 0 0 3px rgba(59,130,246,0.22);} 
+
+    .actions{
+      display:flex;
+      gap:.75rem;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:.25rem;
+    }
+
+    .btn{
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .75rem 1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight:900;
+      transition: all .2s;
+      font-family:'Inter',sans-serif;
+    }
+    .btn:hover{transform:translateY(-2px);border-color:rgba(59,130,246,0.85);box-shadow:0 12px 30px rgba(59,130,246,0.15);} 
+    .btn.primary{background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;}
+
+    .status{min-height:20px;font-weight:800;color:var(--text-muted);}
+    .status.error{color:var(--danger);} 
+    .status.ok{color:var(--ok);} 
+
+    @media(max-width:600px){
+      .back-link{position:static;margin:0 0 1rem 0;}
+      header{ text-align:left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a class="back-link" href="index.html">← Ana Sayfa</a>
+      <div class="title">Giriş Yap</div>
+    </header>
+
+    <div class="card">
+      <form class="form" id="loginForm">
+        <div>
+          <label for="username">Kullanıcı Adı</label>
+          <input id="username" type="text" autocomplete="username" placeholder="Kullanıcı adı">
+        </div>
+        <div>
+          <label for="password">Parola</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Parola">
+        </div>
+        <div class="status" id="status"></div>
+        <div class="actions">
+          <a class="btn" href="hesap-olustur.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">Hesap Oluştur</a>
+          <button class="btn primary" type="submit">Giriş</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const AUTH_KEY = '10BTV_logged_in';
+
+    const statusEl = document.getElementById('status');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+
+    function setStatus(msg, type) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status' + (type ? (' ' + type) : '');
+    }
+
+    // Backend API ile giriş (hem local Express hem Netlify Functions/Supabase)
+    async function backendLogin(username, password) {
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include'
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data?.message || 'Kullanıcı adı veya parola hatalı.');
+      return data;
+    }
+
+    // Offline fallback: localStorage'daki kayıtlı kullanıcılar
+    function localLogin(username, password) {
+      // Yönetici hesabı
+      if (username === 'admin' && password === '1234') {
+        return { ok: true, username: 'admin', isAdmin: true };
+      }
+      // Normal kullanıcı (hesap-olustur.html eski sürümde localStorage'a kaydeder)
+      const savedPass = localStorage.getItem('10BTV_user_' + username);
+      if (savedPass !== null && savedPass === password) {
+        return { ok: true, username: username, isAdmin: false };
+      }
+      return null;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const u = usernameEl.value.trim();
+      const p = passwordEl.value;
+
+      if (!u || !p) {
+        setStatus('Kullanıcı adı ve parola gir.', 'error');
+        return;
+      }
+
+      setStatus('Giriş yapılıyor...', '');
+
+      try {
+        // ÖNCE: Backend API (Supabase / Express) ile giriş dene
+        const data = await backendLogin(u, p);
+        localStorage.setItem(AUTH_KEY, 'true');
+        try { localStorage.setItem('10BTV_last_user', data.username || u); } catch (ex) {}
+
+        setStatus('Giriş başarılı. Yönlendiriliyor...', 'ok');
+
+        setTimeout(() => {
+          window.location.href = data.isAdmin ? 'admin-kullanici-listesi.html' : 'index.html';
+        }, 700);
+      } catch (err) {
+        // Backend yanıt vermezse (offline / Netlify dev) localStorage fallback
+        const local = localLogin(u, p);
+        if (local) {
+          localStorage.setItem(AUTH_KEY, 'true');
+          try { localStorage.setItem('10BTV_last_user', local.username); } catch (ex) {}
+          setStatus('Giriş başarılı (yerel). Yönlendiriliyor...', 'ok');
+          setTimeout(() => {
+            window.location.href = local.isAdmin ? 'admin-kullanici-listesi.html' : 'index.html';
+          }, 700);
+          return;
+        }
+        setStatus(err.message || 'Kullanıcı adı veya parola hatalı.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

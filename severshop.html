@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Severshop Market — 10BTV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --border: #334155;
+            --purple: #8b5cf6;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2vw 1vw;
+            font-size: calc(14px + 0.3vw);
+        }
+
+        .container {
+            max-width: 95%;
+            margin: auto;
+            width: 1200px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5vw;
+            margin-bottom: 2vw;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: .25s;
+            font-weight: 600;
+            font-size: calc(0.85rem + 0.2vw);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            transform: translateX(-3px);
+        }
+
+        .masthead {
+            font-size: calc(1.8rem + 1vw);
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .shop-coins {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            padding: 0.6vw 1.2vw;
+            border-radius: 12px;
+            font-weight: 800;
+            color: #fbbf24;
+            font-size: calc(0.9rem + 0.3vw);
+        }
+
+        .packs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(calc(180px + 4vw), 1fr));
+            gap: 2vw;
+            margin-top: 1rem;
+        }
+
+        .pack-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 1.5vw;
+            text-align: center;
+            transition: 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: calc(280px + 5vw);
+        }
+
+        .pack-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .pack-card.pack-1 {
+            border-color: #cd7f32;
+            background: linear-gradient(180deg, #1e293b 0%, #2d2015 100%);
+        }
+
+        .pack-card.pack-2 {
+            border-color: #c0c0c0;
+            background: linear-gradient(180deg, #1e293b 0%, #222a35 100%);
+        }
+
+        .pack-card.pack-3 {
+            border-color: #ffd700;
+            background: linear-gradient(180deg, #1e293b 0%, #3a3010 100%);
+        }
+
+        .pack-card.pack-4 {
+            border-color: #a855f7;
+            background: linear-gradient(180deg, #1e293b 0%, #2e1a47 100%);
+        }
+
+        .pack-card.pack-5 {
+            border-color: #ef4444;
+            background: linear-gradient(180deg, #1e293b 0%, #451616 100%);
+        }
+
+        .pack-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: 99px;
+            display: inline-block;
+            margin: 0 auto 1rem auto;
+            position: static;
+        }
+
+        .pack-1 .pack-badge {
+            background: #cd7f32;
+            color: #fff;
+        }
+
+        .pack-2 .pack-badge {
+            background: #c0c0c0;
+            color: #000;
+        }
+
+        .pack-3 .pack-badge {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .pack-4 .pack-badge {
+            background: #a855f7;
+            color: #fff;
+        }
+
+        .pack-5 .pack-badge {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .pack-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .pack-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .pack-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .pack-price {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+        }
+
+        .pack-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #fff;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pack-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <a href="oyunlar.html" class="back-link">← Oyunlara Dön</a>
+            <div class="masthead">🛒 SEVERSHOP</div>
+            <div class="shop-coins">
+                <span>🪙</span>
+                <span id="shopCoinsVal">100</span>
+                <span>Altın</span>
+            </div>
+        </header>
+
+        <div class="packs-grid">
+            <!-- Bronz Paket -->
+            <div class="pack-card pack-1">
+                <div>
+                    <span class="pack-badge">Bronz</span>
+                    <div class="pack-icon">🟫</div>
+                    <h3 class="pack-name">Bronz Paket</h3>
+                    <p class="pack-info">50 - 70 Overall arası oyuncu garantili. Düşük bütçeli başlangıç paketi.</p>
+                </div>
+                <div>
+                    <div class="pack-price">🪙 50</div>
+                    <button class="pack-btn" onclick="buyPack(1)">Satın Al</button>
+                </div>
+            </div>
+            <!-- Gümüş Paket -->
+            <div class="pack-card pack-2">
+                <div>
+                    <span class="pack-badge">Gümüş</span>
+                    <div class="pack-icon">⬜</div>
+                    <h3 class="pack-name">Gümüş Paket</h3>
+                    <p class="pack-info">70 - 75 Overall arası oyuncu garantili. Orta seviye kadrolar için ideal.</p>
+                </div>
+                <div>
+                    <div class="pack-price">🪙 300</div>
+                    <button class="pack-btn" onclick="buyPack(2)">Satın Al</button>
+                </div>
+            </div>
+            <!-- Altın Paket -->
+            <div class="pack-card pack-3">
+                <div>
+                    <span class="pack-badge">Altın</span>
+                    <div class="pack-icon">🟨</div>
+                    <h3 class="pack-name">Altın Paket</h3>
+                    <p class="pack-info">75 - 80 Overall arası oyuncu garantili. Yıldız oyuncu şansı yüksek!</p>
+                </div>
+                <div>
+                    <div class="pack-price">🪙 1000</div>
+                    <button class="pack-btn" onclick="buyPack(3)">Satın Al</button>
+                </div>
+            </div>
+            <!-- Seçkin Paket -->
+            <div class="pack-card pack-4">
+                <div>
+                    <span class="pack-badge">Seçkin</span>
+                    <div class="pack-icon">🟦</div>
+                    <h3 class="pack-name">Seçkin Paket</h3>
+                    <p class="pack-info">80 - 85 Overall arası oyuncu garantili. Süper starları kadrona kat!</p>
+                </div>
+                <div>
+                    <div class="pack-price">🪙 3000</div>
+                    <button class="pack-btn" onclick="buyPack(4)">Satın Al</button>
+                </div>
+            </div>
+            <!-- Efsane Paket -->
+            <div class="pack-card pack-5">
+                <div>
+                    <span class="pack-badge">Efsane</span>
+                    <div class="pack-icon">🟥</div>
+                    <h3 class="pack-name">Efsane Paket</h3>
+                    <p class="pack-info">85 - 99 Overall arası oyuncu garantili. En iyilerin en iyisi!</p>
+                </div>
+                <div>
+                    <div class="pack-price">🪙 10000</div>
+                    <button class="pack-btn" onclick="buyPack(5)">Satın Al</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userCoins = 100;
+
+        async function loadCoins() {
+            try {
+                const res = await fetch('/api/coins');
+                const data = await res.json();
+                if (data.ok) {
+                    userCoins = data.coins;
+                    document.getElementById('shopCoinsVal').textContent = userCoins;
+                }
+            } catch (e) {
+                console.error("Altın yüklenirken hata oluştu:", e);
+            }
+        }
+
+        async function buyPack(packId) {
+            const prices = { 1: 50, 2: 300, 3: 1000, 4: 3000, 5: 10000 };
+            const price = prices[packId] || 0;
+
+            if (userCoins < price) {
+                alert("Yetersiz altın! Paket açmak için daha fazla altına ihtiyacınız var.");
+                return;
+            }
+
+            if (!confirm("Bu paketi satın almak istediğinize emin misiniz?")) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/buy-pack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ packId })
+                });
+                const data = await res.json();
+                if (!data.ok) {
+                    alert(data.message || "Paket satın alınamadı.");
+                    return;
+                }
+
+                // Altını güncelle
+                userCoins = data.coins;
+                document.getElementById('shopCoinsVal').textContent = userCoins;
+
+                // Tebrik mesajı ve çıkan oyuncuyu göster
+                const p = data.player;
+                if (p) {
+                    alert(`🎉 Tebrikler! Paketten ${p.name} (${p.overall} OVR - ${p.pos}) çıktı! Kart koleksiyonunuza eklendi.`);
+                } else {
+                    alert("Paket başarıyla açıldı ve koleksiyonunuza eklendi!");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Bir hata oluştu!");
+            }
+        }
+
+        // Sayfa açıldığında güncel altını çek
+        loadCoins();
+    </script>
+</body>
+
+</html>

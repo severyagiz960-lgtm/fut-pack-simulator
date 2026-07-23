@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haberler — 10BTV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59,130,246,0.3);
+            --gold: #fbbf24;
+            --border: #334155;
+            --paper: #1e293b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+            position: relative;
+        }
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            border-radius: 2px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        .back-link:hover { color: var(--accent); transform: translateX(-3px); }
+        .masthead {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .masthead-sub {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-muted);
+            font-size: 1rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+        .date-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .date-line::before, .date-line::after {
+            content: '';
+            flex: 1;
+            max-width: 100px;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Newspaper Grid */
+        .newspaper {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            position: relative;
+        }
+        .newspaper::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, var(--border), transparent);
+            transform: translateX(-50%);
+        }
+
+        /* Article Card */
+        .article {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .article:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: var(--accent);
+        }
+        .article-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 3px solid var(--accent);
+        }
+        .article.no-image .article-image { display: none; }
+        .article-content {
+            padding: 1.5rem;
+        }
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .article-category {
+            background: rgba(59,130,246,0.15);
+            color: var(--accent);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+        .article-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.8rem;
+            color: var(--text);
+        }
+        .article-body {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            text-align: justify;
+            column-count: 1;
+        }
+        .article-body.two-col {
+            column-count: 2;
+            column-gap: 1.5rem;
+        }
+        .article-body p + p {
+            margin-top: 0.8rem;
+        }
+
+        /* ===== FEATURED ARTICLE ===== */
+        .article.featured {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 320px;
+        }
+        
+        .article-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 4px;
+            background: var(--bg);
+            min-height: 300px;
+            width: 100%;
+        }
+        .article-gallery .article-image {
+            width: 100%;
+            height: 100%;
+            min-height: 150px;
+            object-fit: cover;
+            display: block;
+            border: none;
+            border-right: 3px solid var(--accent);
+            border-bottom: 3px solid var(--accent);
+            transition: transform 0.3s ease;
+        }
+        .article-gallery .article-image:nth-child(2n) {
+            border-right: none;
+        }
+        .article-gallery .article-image:nth-child(n+3) {
+            border-bottom: none;
+        }
+        .article-gallery .article-image:hover {
+            transform: scale(1.02);
+            z-index: 2;
+        }
+        
+        .article.featured .article-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .article.featured .article-headline {
+            font-size: 1.8rem;
+        }
+        .article.featured .article-body {
+            column-count: 1;
+            font-size: 1rem;
+        }
+
+        /* ================= MOBİL ================= */
+        @media (max-width: 900px) {
+            body {
+                padding: 0.75rem 0.5rem;
+            }
+            .newspaper {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .newspaper::before { display: none; }
+            
+            .article {
+                border-radius: 12px;
+            }
+            
+            /* Featured mobilde flex kolon */
+            .article.featured {
+                display: flex;
+                flex-direction: column;
+                min-height: auto;
+            }
+            
+            /* Galeri mobilde düzgün grid + sabit yükseklik */
+            .article-gallery {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: repeat(2, 200px);
+                min-height: auto;
+                height: auto;
+                gap: 3px;
+                background: var(--bg);
+            }
+            .article-gallery .article-image {
+                width: 100%;
+                height: 200px;
+                min-height: 200px;
+                border: none;
+                border-right: 2px solid var(--accent);
+                border-bottom: 2px solid var(--accent);
+            }
+            .article-gallery .article-image:nth-child(2n) {
+                border-right: none;
+            }
+            .article-gallery .article-image:nth-child(n+3) {
+                border-bottom: none;
+            }
+            
+            .article.featured .article-content {
+                padding: 1rem;
+            }
+            .article.featured .article-headline {
+                font-size: 1.25rem;
+                margin-bottom: 0.6rem;
+            }
+            
+            .masthead { 
+                font-size: 1.8rem; 
+                letter-spacing: 1px;
+            }
+            .masthead-sub {
+                font-size: 0.8rem;
+                letter-spacing: 2px;
+            }
+            .article-headline {
+                font-size: 1.15rem;
+            }
+            .article-content {
+                padding: 1rem;
+            }
+            .article-body {
+                font-size: 0.9rem;
+                line-height: 1.6;
+                text-align: left;
+            }
+            .article-body.two-col {
+                column-count: 1;
+            }
+            .article-image {
+                height: 160px;
+            }
+            .article-meta {
+                gap: 0.5rem;
+                font-size: 0.7rem;
+                margin-bottom: 0.6rem;
+            }
+            .article-category {
+                font-size: 0.65rem;
+                padding: 0.15rem 0.5rem;
+            }
+            header {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.25rem;
+            }
+            .date-line {
+                font-size: 0.75rem;
+                margin-top: 0.75rem;
+            }
+            .back-link {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .article-gallery {
+                grid-template-rows: repeat(2, 170px);
+            }
+            .article-gallery .article-image {
+                height: 170px;
+                min-height: 170px;
+            }
+            .article-headline {
+                font-size: 1.1rem;
+            }
+            .article-content {
+                padding: 0.875rem;
+            }
+            .article-body {
+                font-size: 0.875rem;
+                line-height: 1.55;
+            }
+            .article.featured .article-headline {
+                font-size: 1.15rem;
+            }
+            .masthead {
+                font-size: 1.5rem;
+            }
+            .masthead-sub {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" target="_self" class="back-link">← Ana Sayfaya Dön</a>
+            <div class="masthead">Haberler</div>
+            <div class="masthead-sub">10B Gazetesi</div>
+            <div class="date-line" id="currentDate"></div>
+        </header>
+
+        <article class="article no-image">
+                <div class="article-content">
+                    <div class="article-meta">
+                        <span class="article-category">Maç Sonucu</span>
+                        <span>10 Haziran 2026</span>
+                    </div>
+                    <h2 class="article-headline">Büyük GALİBİYET</h2>
+                    <div class="article-body two-col">
+                        <p>Futbol sahalarında nefes kesen bir mücadeleye tanıklık ettik! Kaptan Tunanın önderliğindeki takım,Ayhan ve Çetinin de fileleri havalandırmasıyla sahadan 7-3 gibi net bir skorla galip ayrıldı. Maçın yıldızı tartışmasız Kaptan Tuna idi. Kendi attığı 3 golün yanı sıra yaptığı 2 asist ile takımının galibiyetinde başrolü üstlendi. Ayhan da 3 gol ve 1 asistle yıldızlaşırken, Çetin 1 golle skora katkı sağladı. Kaybeden takımda ise Enes 2 gol, Pusat ise 1 golle mücadele etti. Yeni transfer Ayhanın performansı ise göz doldurdu ve takıma adeta ilaç gibi geldi. Tunanın takımı, rakibini ezici bir üstünlükle mağlup ederek sahadan galip ayrılmayı başardı. Bu galibiyet, takımın moralini yükseltirken, gelecek maçlar için de önemli bir ivme kazandırdı.</p>
+                        <p>Kaptan Yağız maç çıkışında "Futbol süprizlerle doludur bu kadar büyük bir farkla yenilmeyi beklemiyorduk ama olabilir böyle şeyler futbolda var herşey nasip."dedi.Maçın diğer yıldızlarından olan Ayhan ise "Yeni takımım bana şans getirdi yeni evin ihtişamı eskisinden büyük olacak."diyerek onun için herşeyin para olduğunu bir kere daha bizlere gösterdi.Kaptan Tunayı tebrik ediyoruz geçen haftanın acısını çıkardı.</p>
+                    </div>
+                </div>
+            </article>
+
+        <div class="newspaper" id="newspaper">
+            <article class="article featured">
+                <div class="article-gallery">
+                    <img class="article-image" src="https://i.ibb.co/SXNcMzFB/Whats-App-mage-2026-06-08-at-19-40-22.jpg" alt="Maç görseli" loading="lazy" />
+                    <img class="article-image" src="https://i.ibb.co/d4WKV2Rp/Whats-App-mage-2026-06-08-at-19-47-18.jpg" alt="Maç görseli" loading="lazy" />
+                    <img class="article-image" src="https://i.ibb.co/pv4zG2YC/Whats-App-mage-2026-06-08-at-19-47-17.jpg" alt="Maç görseli" loading="lazy" />
+                    <img class="article-image" src="https://i.ibb.co/RVnhykh/Chat-GPT-mage-8-Haz-2026-20-05-50.png" alt="Maç AI görseli" loading="lazy" />
+                </div>
+                <div class="article-content">
+                    <div class="article-meta">
+                        <span class="article-category">Transfer</span>
+                        <span>8 Haziran 2026</span>
+                    </div>
+                    <h2 class="article-headline">ŞAŞIRTICI ANLAŞMA</h2>
+                    <div class="article-body">
+                        <p>Sezona bomba gibi başlayan Ayhan E. B., Tuna'nın cazip teklifine karşı koyamadı. Daha ilk maçından 4 gol atan Ayhan, Tuna'nın sonuna kadar istediği isimlerden birisi oldu. Tuna AS, rekor bonservis bedeliyle Ayhan'ı kendi takımına çekti.</p>
+                        <p>Kaptan Tuna, Yağız'ın teklif ettiği 45M + Yusuf Çiçek'i kabul ederek rekor bonservisle Ayhan'ı kendi saflarına çekti. Kaptan Tuna, "Bu bizi maddi olarak eksiye düşürse de Ayhan'a değer. Kesin olarak istediğim bir futbolcuydu." dedi.</p>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Haber 2: Transfer Söylentisi -->
+            <article class="article no-image">
+                <div class="article-content">
+                    <div class="article-meta">
+                        <span class="article-category">Transfer Söylentisi</span>
+                        <span>8 Haziran 2026</span>
+                    </div>
+                    <h2 class="article-headline">Çiçek'ten Sonraki Durak Pusat</h2>
+                    <div class="article-body two-col">
+                        <p>Kaptan Yağız, rekor bonservis bedeliyle Ayhan'ı verip Yusuf Çiçek'i aldıktan sonra gözünü Pusat'a dikti gibi görünüyor. Aynı gün kaptan Yağız'ın Pusat ile Çobanlı'da görüştüğü iddia ediliyor. Kaptan Yağız, gözünü Tuna'nın savunmacılarına dikti gibi görünüyor.</p>
+                        <p>Kaptan Yağız, verdiği röportajda "Ayhan'ın ayrılığını bekliyordum. Kendisiyle konuştuğumda gitmek istediğini söyledi, onu tutamazdım. Herkesin kendi kararı. Onun yerine Çiçek'i alarak daha defansif bir diziliş kullanacağım, sonuçları çarşamba göreceğiz." ifadelerini kullandı.</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script>
+        const date = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = date.toLocaleDateString('tr-TR', options);
+    </script>
+</body>
+</html>

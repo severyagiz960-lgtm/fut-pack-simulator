@@ -1,0 +1,42 @@
+========================================
+ 10BTV - NETLIFY'A DEPLOY TALİMATI
+========================================
+
+Site: https://testtransfermarkt.netlify.app
+
+YÖNTEM 1 — Netlify Dashboard (En Kolay)
+-----------------------------------------
+1. https://app.netlify.com/sites/testtransfermarkt adresine git
+2. Üst menüden "Deploy" sekmesine tıkla
+3. "Drag and drop your site folder here" alanına
+   public klasörünün TAMAMINI sürükle-bırak
+4. Deploy bitince site otomatik güncellenir
+
+YÖNTEM 2 — Netlify CLI (Login Gerekli)
+----------------------------------------
+netlify login
+netlify deploy --prod --dir="public"
+
+
+DEPLOY ÖNCESİ Supabase AYARLARI (ÇOK ÖNEMLİ!)
+------------------------------------------------
+1. https://supabase.com adresine gir
+2. Projenin SQL Editor'una gir
+3. supabase-setup.sql dosyasının TAMAMINI kopyala-yapıştır
+4. "Run" butonuna bas
+
+5. Netlify Dashboard > Site settings > Environment variables
+   Aşağıdaki değişkenleri ekle:
+   
+   SUPABASE_URL = https://xxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY = service_role_xxx...
+   JWT_SECRET = (rastgele bir metin yaz)
+
+========================================
+ DEPLOY SONRASI KONTROL LİSTESİ
+========================================
+[ ] Oyunlar sayfasında: Koleksiyon + Draft + Severshop görünüyor
+[ ] Admin panelinde: Kullanıcılar + Oyuncular sekmeleri çalışıyor
+[ ] Ana sayfada oyuncu verileri geliyor
+[ ] Giriş yapılabiliyor
+[ ] Kayıt olunabiliyor

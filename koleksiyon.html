@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, invuitial-scale=1.0">
+    <title>Koleksiyon — 10BTV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --border: #334155;
+            --purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2vw 1vw;
+            font-size: calc(14px + 0.3vw);
+        }
+
+        .container {
+            max-width: 95%;
+            margin: auto;
+            width: 1200px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1.5vw;
+            margin-bottom: 2vw;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: .25s;
+            font-weight: 600;
+            font-size: calc(0.85rem + 0.2vw);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            transform: translateX(-3px);
+        }
+
+        .masthead {
+            font-size: calc(1.8rem + 1vw);
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats-badge {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            padding: 0.6vw 1.2vw;
+            border-radius: 12px;
+            font-weight: 800;
+            color: #a78bfa;
+            font-size: calc(0.9rem + 0.3vw);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(calc(180px + 4vw), 1fr));
+            gap: 2vw;
+            margin-top: 1rem;
+        }
+
+        .no-cards {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--card-bg);
+            border: 1px dashed var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            grid-column: 1 / -1;
+        }
+
+        .no-cards-btn {
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .no-cards-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* FUT Kart Tasarımı */
+        .fut-card {
+            width: 100%;
+            max-width: 260px;
+            height: 370px;
+            border-radius: 18px;
+            padding: 3px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            margin: auto;
+            transition: transform 0.3s;
+        }
+
+        .fut-card:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .fut-card-bg-gold {
+            background: linear-gradient(145deg, #d4af37, #f4d03f, #d4af37, #aa8c2c);
+        }
+
+        .fut-card-bg-purple {
+            background: linear-gradient(145deg, #7c3aed, #a855f7, #7c3aed, #5b21b6);
+        }
+
+        .fut-card-bg-blue {
+            background: linear-gradient(145deg, #2563eb, #3b82f6, #2563eb, #1d4ed8);
+        }
+
+        .fut-card-bg-green {
+            background: linear-gradient(145deg, #16a34a, #22c55e, #16a34a, #15803d);
+        }
+
+        .fut-card-bg-grey {
+            background: linear-gradient(145deg, #4b5563, #6b7280, #4b5563, #374151);
+        }
+
+        .fut-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .3);
+            border: 2px solid rgba(255, 255, 255, .25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, .9);
+            margin: .4rem auto;
+        }
+
+        .fut-hex-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .35rem;
+            margin-top: auto;
+        }
+
+        .fut-hex {
+            background: rgba(0, 0, 0, .35);
+            border-radius: 8px;
+            padding: .3rem .15rem;
+            text-align: center;
+        }
+
+        .fut-hex-label {
+            font-size: .5rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .7);
+            text-transform: uppercase;
+        }
+
+        .fut-hex-value {
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .fut-inner {
+            background: #0f172a;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .fut-overall-num {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .fut-position {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-top: 2px;
+        }
+        .filters {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg);
+            padding: .5rem 0;
+        }
+        .filters input, .filters select {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: .6rem .8rem;
+            border-radius: 10px;
+            font-size: .88rem;
+            outline: none;
+            font-family: inherit;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .filters input {
+            flex: 1;
+            min-width: 140px;
+        }
+        .filters input:focus, .filters select:focus {
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <a href="oyunlar.html" class="back-link">← Oyunlara Dön</a>
+            <div class="masthead" style="display: flex; align-items: center; gap: 10px;">
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 8px rgba(139, 92, 246, 0.6));">
+                    <defs>
+                        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffe066" />
+                            <stop offset="50%" stop-color="#f59e0b" />
+                            <stop offset="100%" stop-color="#b45309" />
+                        </linearGradient>
+                        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#1d4ed8" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Shield Background -->
+                    <path d="M 50,10 L 85,25 C 85,65 50,90 50,90 C 50,90 15,65 15,25 Z" fill="url(#shieldGrad)" stroke="url(#goldGrad)" stroke-width="4" stroke-linejoin="round" />
+                    <!-- Inner Gold Border -->
+                    <path d="M 50,16 L 79,29 C 79,61 50,82 50,82 C 50,82 21,61 21,29 Z" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" opacity="0.7" />
+                    <!-- Sharp Star in Center -->
+                    <polygon points="50,32 54,44 67,44 56,52 60,65 50,57 40,65 44,52 33,44 46,44" fill="url(#goldGrad)" filter="drop-shadow(0px 1px 3px rgba(0,0,0,0.5))" />
+                </svg>
+                <span>KOLEKSİYON</span>
+            </div>
+            <div class="stats-badge">
+                <span id="cardCountVal">0</span> Kart
+            </div>
+        </header>
+
+        <div class="filters">
+            <input type="text" id="search" placeholder="Oyuncu ara..." autocomplete="off">
+            <select id="sort">
+                <option value="overall-desc">OVR ↓</option>
+                <option value="overall-asc">OVR ↑</option>
+                <option value="name">İsim (A-Z)</option>
+            </select>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            <div class="no-cards">Yükleniyor...</div>
+        </div>
+    </div>
+
+    <script>
+        let allMyCards = [];
+
+        async function loadMyCards() {
+            const grid = document.getElementById('cardsGrid');
+            try {
+                const res = await fetch('/api/mycards');
+                const data = await res.json();
+                if (!data.ok || !data.cards || data.cards.length === 0) {
+                    grid.innerHTML = `
+                        <div class="no-cards">
+                            <p>Henüz hiç kart çıkartmamışsın!</p>
+                            <button class="no-cards-btn" onclick="window.location.href='severshop.html'">🛒 Severshop'a Git ve Paket Aç</button>
+                        </div>
+                    `;
+                    document.getElementById('cardCountVal').textContent = "0";
+                    return;
+                }
+
+                allMyCards = data.cards;
+                document.getElementById('cardCountVal').textContent = allMyCards.length;
+                renderMyCards();
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = `<div class="no-cards">Kartlar yüklenirken bir hata oluştu!</div>`;
+            }
+        }
+
+        function renderMyCards() {
+            const grid = document.getElementById('cardsGrid');
+            const q = document.getElementById('search').value.toLowerCase();
+            const s = document.getElementById('sort').value;
+
+            // Filter
+            let filtered = allMyCards.filter(card => {
+                const p = card.player;
+                if (!p) return false;
+                return p.name.toLowerCase().includes(q);
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                const pa = a.player;
+                const pb = b.player;
+                if (s === 'overall-desc') return pb.overall - pa.overall;
+                if (s === 'overall-asc') return pa.overall - pb.overall;
+                if (s === 'name') return pa.name.localeCompare(pb.name);
+                return 0;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="no-cards">Aradığınız kriterlere uygun kart bulunamadı.</div>`;
+                return;
+            }
+
+            let gridHTML = '';
+            filtered.forEach(card => {
+                const p = card.player;
+                const bgClass = p.overall >= 85 ? 'gold' : p.overall >= 80 ? 'purple' : p.overall >= 75 ? 'blue' : p.overall >= 70 ? 'green' : 'grey';
+                const initials = p.name.split(/[\s.]+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                const isSpecial = card.is_special === 1;
+
+                const stats = p.role === 'keeper' ? [
+                    { l: 'DIV', v: p.div || 50 },
+                    { l: 'HAN', v: p.han || 50 },
+                    { l: 'KIC', v: p.kic || 50 },
+                    { l: 'REF', v: p.ref || 50 },
+                    { l: 'SPD', v: p.spe || 50 },
+                    { l: 'POS', v: p.pos_stat || 50 }
+                ] : [
+                    { l: 'PAC', v: p.pac || 50 },
+                    { l: 'SHO', v: p.sho || 50 },
+                    { l: 'PAS', v: p.pas || 50 },
+                    { l: 'DRB', v: p.drb || 50 },
+                    { l: 'DEF', v: p.def || 50 },
+                    { l: 'PHY', v: p.pys || 50 }
+                ];
+
+                gridHTML += `
+                    <div class="fut-card fut-card-bg-${bgClass}">
+                        <div class="fut-inner">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <div class="fut-overall-num">${p.overall}</div>
+                                    <div class="fut-position">${p.pos}</div>
+                                </div>
+                                <div style="font-size: 1.3rem;">${isSpecial ? '⭐' : '⚽'}</div>
+                            </div>
+                            <div class="fut-avatar">${initials}</div>
+                            <div class="fut-name" style="font-size: 1.05rem; font-weight: 800; color: #fff; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,.4); margin: 0.4rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
+                            <div class="fut-hex-stats">
+                                ${stats.map(s => `
+                                    <div class="fut-hex">
+                                        <div class="fut-hex-label">${s.l}</div>
+                                        <div class="fut-hex-value">${s.v}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = gridHTML;
+        }
+
+        document.getElementById('search').addEventListener('input', renderMyCards);
+        document.getElementById('sort').addEventListener('change', renderMyCards);
+
+        // Init
+        loadMyCards();
+    </script>
+</body>
+
+</html>

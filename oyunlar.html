@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oyunlar — 10BTV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>" />
+    <style>
+        :root{
+            --bg:#0f172a;
+            --card-bg:#1e293b;
+            --text:#f1f5f9;
+            --text-muted:#94a3b8;
+            --accent:#3b82f6;
+            --border:#334155;
+            --purple:#8b5cf6;
+            --danger:#ef4444;
+            --ok:#22c55e;
+        }
+
+        *{ margin:0; padding:0; box-sizing:border-box; }
+
+        body{
+            font-family:'Inter',sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100vh;
+            padding:2rem 1rem;
+        }
+
+        .container{
+            max-width:1300px;
+            margin:auto;
+        }
+
+        header{
+            text-align:center;
+            margin-bottom:3rem;
+            padding-bottom:2rem;
+            border-bottom:2px solid var(--border);
+        }
+
+        .back-link{
+            display:inline-flex;
+            align-items:center;
+            gap:.5rem;
+            color:var(--text-muted);
+            text-decoration:none;
+            margin-bottom:1rem;
+            transition:.25s;
+            font-weight:600;
+        }
+
+        .back-link:hover{
+            color:var(--accent);
+            transform:translateX(-3px);
+        }
+
+        .masthead{
+            font-size:3rem;
+            font-weight:800;
+            background:linear-gradient(135deg,#8b5cf6,#3b82f6);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .games{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+            gap:1.5rem;
+            margin-top:2rem;
+        }
+
+        .game-card{
+            background:var(--card-bg);
+            border:1px solid var(--border);
+            border-radius:18px;
+            padding:2rem;
+            transition:.3s;
+            cursor:pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover{
+            transform:translateY(-6px);
+            border-color:var(--purple);
+            box-shadow:0 15px 35px rgba(0,0,0,.35);
+        }
+
+        .game-icon{ font-size:3rem; margin-bottom:1rem; }
+        .game-title{ font-size:1.4rem; font-weight:700; margin-bottom:.5rem; }
+        .game-desc{ color:var(--text-muted); line-height:1.6; }
+
+        /* --- Login gate --- */
+        .gate-overlay{
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+        }
+        .gate-overlay.active { display: flex; }
+
+        .login-modal{
+            width: 100%;
+            max-width: 520px;
+            background: #0b1220;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 22px;
+            padding: 1.5rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+
+        .login-top{
+            display:flex;
+            align-items:flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-title{
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+
+        .login-close{
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+        .login-close:hover{
+            transform: rotate(90deg);
+            border-color: rgba(59,130,246,0.45);
+            background: rgba(59,130,246,0.12);
+        }
+
+        /* --- Sağ üst hızlı menü --- */
+        .quick-auth-wrap{
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 999;
+        }
+
+        /* --- Severshop Market Paneli --- */
+        .shop-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            display: none;
+            z-index: 99999;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+        }
+        .shop-overlay.active {
+            display: block;
+        }
+        .shop-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .shop-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .shop-coins {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            padding: 0.6rem 1.2rem;
+            border-radius: 99px;
+            font-weight: 800;
+            color: #fbbf24;
+            font-size: 1.1rem;
+        }
+        .shop-close-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .shop-close-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+        .packs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .pack-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 320px;
+        }
+        .pack-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .pack-card.pack-1 { border-color: #cd7f32; background: linear-gradient(180deg, #1e293b 0%, #2d2015 100%); }
+        .pack-card.pack-2 { border-color: #c0c0c0; background: linear-gradient(180deg, #1e293b 0%, #222a35 100%); }
+        .pack-card.pack-3 { border-color: #ffd700; background: linear-gradient(180deg, #1e293b 0%, #3a3010 100%); }
+        .pack-card.pack-4 { border-color: #a855f7; background: linear-gradient(180deg, #1e293b 0%, #2e1a47 100%); }
+        .pack-card.pack-5 { border-color: #ef4444; background: linear-gradient(180deg, #1e293b 0%, #451616 100%); }
+
+        .pack-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: 99px;
+            display: inline-block;
+            margin: 0 auto 1rem auto;
+        }
+        .pack-1 .pack-badge { background: #cd7f32; color: #fff; }
+        .pack-2 .pack-badge { background: #c0c0c0; color: #000; }
+        .pack-3 .pack-badge { background: #ffd700; color: #000; }
+        .pack-4 .pack-badge { background: #a855f7; color: #fff; }
+        .pack-5 .pack-badge { background: #ef4444; color: #fff; }
+
+        .pack-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));
+        }
+        .pack-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .pack-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        .pack-price {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fbbf24;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        .pack-btn {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: #fff;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .pack-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+        .pack-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+          /* --- Kart Açılış Animasyonu ve Modal --- */
+          .pack-open-overlay {
+              position: fixed;
+              inset: 0;
+              background: radial-gradient(circle, rgba(15,23,42,0.98) 0%, rgba(2,6,23,1) 100%);
+              z-index: 999999;
+              display: none;
+              align-items: center;
+              justify-content: center;
+              flex-direction: column;
+              backdrop-filter: blur(15px);
+              overflow: hidden;
+          }
+          .pack-open-overlay.active {
+              display: flex;
+          }
+          
+          /* CS:GO Kasa Açma Rulet Tasarımı */
+          .roulette-container {
+              width: 100%;
+              max-width: 800px;
+              height: 180px;
+              background: rgba(15, 23, 42, 0.8);
+              border: 3px solid #334155;
+              border-radius: 16px;
+              position: relative;
+              overflow: hidden;
+              margin-bottom: 2.5rem;
+              box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.5);
+              display: flex;
+              align-items: center;
+          }
+          /* Kırmızı Hedef Çizgisi */
+          .roulette-pointer {
+              position: absolute;
+              left: 50%;
+              top: 0;
+              bottom: 0;
+              width: 4px;
+              background: #ef4444;
+              z-index: 10;
+              box-shadow: 0 0 15px #ef4444, 0 0 5px #ef4444;
+              transform: translateX(-50%);
+          }
+          .roulette-pointer::before {
+              content: '▼';
+              position: absolute;
+              top: -5px;
+              left: 50%;
+              transform: translateX(-50%);
+              color: #ef4444;
+              font-size: 14px;
+          }
+          .roulette-pointer::after {
+              content: '▲';
+              position: absolute;
+              bottom: -5px;
+              left: 50%;
+              transform: translateX(-50%);
+              color: #ef4444;
+              font-size: 14px;
+          }
+          .roulette-track {
+              display: flex;
+              gap: 12px;
+              padding: 0 400px; /* Başlangıçta ortalamak için */
+              transition: transform 6s cubic-bezier(0.1, 0.8, 0.15, 1); /* CS:GO yavaşlama eğrisi */
+              will-change: transform;
+          }
+          .roulette-item {
+              width: 110px;
+              height: 150px;
+              flex-shrink: 0;
+              border-radius: 12px;
+              padding: 2px;
+              position: relative;
+              box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+              transition: transform 0.3s;
+          }
+          .roulette-item-inner {
+              background: #0f172a;
+              width: 100%;
+              height: 100%;
+              border-radius: 10px;
+              padding: 0.5rem;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              align-items: center;
+              position: relative;
+              overflow: hidden;
+          }
+          .roulette-item-ovr {
+              font-size: 1.4rem;
+              font-weight: 900;
+              color: #fff;
+              line-height: 1;
+          }
+          .roulette-item-pos {
+              font-size: 0.65rem;
+              font-weight: 800;
+              color: #fbbf24;
+              background: rgba(0,0,0,0.4);
+              padding: 1px 4px;
+              border-radius: 4px;
+              margin-top: 2px;
+          }
+          .roulette-item-avatar {
+              width: 45px;
+              height: 45px;
+              border-radius: 50%;
+              background: rgba(0,0,0,0.3);
+              border: 1px solid rgba(255,255,255,0.2);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.1rem;
+              font-weight: 900;
+              color: #fff;
+              margin: 4px 0;
+          }
+          .roulette-item-name {
+              font-size: 0.7rem;
+              font-weight: 800;
+              color: #fff;
+              text-align: center;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              width: 100%;
+          }
+          
+          /* Çıkan Kartın Büyük Gösterimi */
+          .final-card-container {
+              opacity: 0;
+              transform: scale(0.5) translateY(30px);
+              transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+              pointer-events: none;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+          }
+          .final-card-container.active {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+              pointer-events: auto;
+          }
+
+          .pack-anim-card {
+              width: 280px;
+              height: 400px;
+              perspective: 1500px;
+              margin-bottom: 1.5rem;
+          }
+
+        /* FUT Kart Tasarımı - Ana Sayfa (index.html) ile uyumlu */
+        .fut-card {
+              width: 280px;
+              height: 400px;
+              border-radius: 14px;
+              padding: 3px;
+              position: relative;
+              overflow: hidden;
+              box-shadow: 0 16px 32px rgba(0,0,0,.5);
+          }
+        .fut-card-bg-gold { background: linear-gradient(145deg,#d4af37,#f4d03f,#d4af37,#aa8c2c); }
+        .fut-card-bg-purple { background: linear-gradient(145deg,#7c3aed,#a855f7,#7c3aed,#5b21b6); }
+        .fut-card-bg-blue { background: linear-gradient(145deg,#2563eb,#3b82f6,#2563eb,#1d4ed8); }
+        .fut-card-bg-green { background: linear-gradient(145deg,#16a34a,#22c55e,#16a34a,#15803d); }
+        .fut-card-bg-grey { background: linear-gradient(145deg,#475569,#64748b,#475569,#334155); }
+        
+        .fut-inner {
+            background: rgba(0,0,0,.25);
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            padding: .8rem;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,.12);
+            position: relative;
+        }
+        .fut-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            pointer-events: none;
+            border-radius: 10px;
+        }
+        .fut-overall-num { font-size: 2.2rem; font-weight: 900; color: #fff; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+        .fut-position {
+            background: rgba(0,0,0,.3); padding: .2rem .6rem; border-radius: 6px;
+            font-size: .8rem; font-weight: 700; color: #fff;
+        }
+        .fut-avatar {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: rgba(0,0,0,.3); border: 2px solid rgba(255,255,255,.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; font-weight: 900; color: rgba(255,255,255,.9);
+            margin: .5rem auto;
+        }
+        .fut-name { font-size: 1.15rem; font-weight: 800; color: #fff; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,.4); margin: 0.5rem 0; }
+        .fut-hex-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: .4rem; margin-top: auto; }
+        .fut-hex { background: rgba(0,0,0,.35); border-radius: 8px; padding: .35rem .2rem; text-align: center; }
+        .fut-hex-label { font-size: .55rem; font-weight: 700; color: rgba(255,255,255,.7); text-transform: uppercase; }
+        .fut-hex-value { font-size: 1rem; font-weight: 900; color: #fff; }
+
+        /* --- Hoşgeldin Ödülü Animasyonu --- */
+        .reward-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backdrop-filter: blur(8px);
+        }
+        .reward-overlay.active { display: flex; }
+
+        .reward-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 3px solid #fbbf24;
+            border-radius: 28px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 60px rgba(251,191,36,0.25);
+            animation: rewardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes rewardPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .reward-coin {
+            font-size: 6rem;
+            animation: coinSpin 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+        @keyframes coinSpin {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.15); filter: drop-shadow(0 0 20px rgba(251,191,36,0.6)); }
+            100% { transform: rotateY(360deg) scale(1); }
+        }
+
+        .reward-text {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 1rem 0 0.5rem;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .reward-subtext {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .reward-claim-btn {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border: none;
+            color: #000;
+            padding: 1rem 2.5rem;
+            border-radius: 99px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .reward-claim-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(251,191,36,0.4);
+        }
+        .reward-claim-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reward-particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 9999998;
+        }
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: particleFall 2s ease-out;
+        }
+        @keyframes particleFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+            100% { opacity: 0; transform: translateY(300px) rotate(720deg) scale(0); }
+        }
+
+        .quick-auth-btn{
+            cursor: pointer;
+            background: rgba(30,41,59,0.85);
+            border: 1px solid rgba(255,255,255,0.14);
+            color:#fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            transition: transform 0.2s ease;
+        }
+        .quick-auth-btn:hover{ transform: translateY(-2px); }
+        .quick-auth-drop{
+            position:absolute;
+            top: 48px;
+            right:0;
+            min-width: 170px;
+            background: rgba(30,41,59,0.98);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            padding: 0.7rem 0.85rem;
+            display:none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+        }
+        .quick-auth-name{
+            color:#94a3b8;
+            font-weight:900;
+            word-break: break-word;
+        }
+
+        .login-form{
+            display:flex;
+            flex-direction: column;
+            gap: .85rem;
+            margin-top: .5rem;
+        }
+
+        .field label{
+            display:block;
+            color: var(--text-muted);
+            font-size: .9rem;
+            font-weight: 700;
+            margin-bottom: .4rem;
+        }
+
+        .field input{
+            width: 100%;
+            padding: .85rem 0.95rem;
+            border-radius: 14px;
+            background: rgba(30,41,59,0.85);
+            border: 1px solid var(--border);
+            color: var(--text);
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .field input:focus{
+            border-color: rgba(59,130,246,0.8);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+        }
+
+        .login-actions{
+            display:flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+            align-items:center;
+            justify-content: flex-end;
+            margin-top: .25rem;
+        }
+
+        .btn{
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: .75rem 1rem;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: all .2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn:hover{
+            transform: translateY(-2px);
+            border-color: rgba(59,130,246,0.8);
+            box-shadow: 0 12px 30px rgba(59,130,246,0.15);
+        }
+
+        .btn.primary{
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border: none;
+        }
+
+        .status{
+            min-height: 20px;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: .92rem;
+        }
+        .status.error{ color: var(--danger); }
+        .status.ok{ color: var(--ok); }
+
+        .muted-note{
+            color: var(--text-muted);
+            font-size: .92rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            header{ margin-bottom: 2rem; }
+            .masthead{ font-size: 2rem; }
+            .game-card{ padding: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <a href="index.html" target="_self" class="back-link">← Ana Sayfaya Dön</a>
+        <div class="masthead">Oyunlar</div>
+    </header>
+
+    <div class="games" id="games">
+        <div class="game-card" data-game="koleksiyon" data-redirect="koleksiyon.html">
+            <div class="game-icon">📚</div>
+            <div class="game-title">Koleksiyon</div>
+            <div class="game-desc">Oyuncu kartlarını topla, koleksiyonunu tamamla.</div>
+        </div>
+
+        <div class="game-card" data-game="draft" data-redirect="draft-builder-game.html">
+            <div class="game-icon">⚽</div>
+            <div class="game-title">Draft Builder — 2v2</div>
+            <div class="game-desc">Oyuncularını seç, rakibini oluştur ve 2v2 maça başla! WASD hareket, SPACE şut.</div>
+        </div>
+
+        <div class="game-card" data-game="severshop" data-redirect="severshop.html">
+            <div class="game-icon">🛒</div>
+            <div class="game-title">SEVERSHOP</div>
+            <div class="game-desc">Market — oyuncu kartları, paketler ve özel eşyalar.</div>
+        </div>
+    </div>
+</div>
+
+<div class="gate-overlay" id="loginOverlay" aria-hidden="true">
+    <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <div class="login-top">
+            <div>
+                <div class="login-title" id="loginTitle">Giriş Yap</div>
+                <div class="muted-note" style="margin-top:.35rem;">
+                    Oyunları oynayabilmek için kullanıcı adı ve parola gerekiyor.
+                </div>
+            </div>
+            <button class="login-close" id="closeLogin" type="button">×</button>
+        </div>
+
+        <div class="login-form">
+            <div class="field">
+                <label for="username">Kullanıcı Adı</label>
+                <input id="username" type="text" autocomplete="username" placeholder="">
+            </div>
+
+            <div class="field">
+                <label for="password">Parola</label>
+                <input id="password" type="password" autocomplete="current-password" placeholder="">
+            </div>
+
+            <div class="status" id="loginStatus"></div>
+
+            <div class="login-actions">
+                <button class="btn" type="button" id="cancelBtn">İptal</button>
+                <button class="btn" type="button" id="registerBtn">Hesap Oluştur</button>
+                <button class="btn primary" type="button" id="loginBtn">Giriş</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Backend cookie auth
+    const AUTH_KEY = "10BTV_logged_in";
+
+    function isLoggedIn() {
+        return localStorage.getItem(AUTH_KEY) === 'true';
+    }
+
+    function setLoggedIn(val) {
+        localStorage.setItem(AUTH_KEY, val ? "true" : "false");
+    }
+
+    async function backendLogin(username, password) {
+        const r = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+            credentials: 'include'
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.ok) throw new Error(data?.message || 'Giriş başarısız');
+        return data;
+    }
+
+    const overlay = document.getElementById('loginOverlay');
+    const statusEl = document.getElementById('loginStatus');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+
+    let pendingRedirect = null;
+
+    function openLogin(redirectUrl) {
+        pendingRedirect = redirectUrl || null;
+        statusEl.textContent = "";
+        statusEl.className = "status";
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden', 'false');
+        usernameEl.value = "";
+        passwordEl.value = "";
+        setTimeout(() => usernameEl.focus(), 0);
+    }
+
+    function closeLogin() {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function showStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = 'status' + (type ? (' ' + type) : '');
+    }
+
+    document.getElementById('closeLogin').addEventListener('click', closeLogin);
+    document.getElementById('cancelBtn').addEventListener('click', closeLogin);
+
+    document.getElementById('registerBtn').addEventListener('click', () => {
+        window.location.href = 'hesap-olustur.html';
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const u = usernameEl.value.trim();
+        const p = passwordEl.value;
+
+        if (!u || !p) {
+            showStatus('Kullanıcı adı ve parola gir.', 'error');
+            return;
+        }
+
+        showStatus('Giriş yapılıyor...', '');
+
+        try {
+            // Önce backend API'ye dene
+            const data = await backendLogin(u, p);
+            setLoggedIn(true);
+            try { localStorage.setItem('10BTV_last_user', data.username || u); } catch(e) {}
+
+            closeLogin();
+            showStatus("Giriş başarılı.", "ok");
+
+            if (pendingRedirect) {
+                const url = pendingRedirect;
+                pendingRedirect = null;
+                window.location.href = url;
+            }
+        } catch (err) {
+            // Backend çalışmıyorsa yerel giriş
+            if (u === 'admin' && p === '1234') {
+                setLoggedIn(true);
+                try { localStorage.setItem('10BTV_last_user', 'admin'); } catch(e) {}
+                closeLogin();
+                showStatus("Giriş başarılı (yerel).", "ok");
+                if (pendingRedirect) {
+                    const url = pendingRedirect;
+                    pendingRedirect = null;
+                    window.location.href = url;
+                }
+                return;
+            }
+            showStatus(err.message || 'Kullanıcı adı veya parola hatalı.', 'error');
+        }
+    });
+
+    document.getElementById('games').addEventListener('click', (e) => {
+        const card = e.target.closest('.game-card');
+        if (!card) return;
+
+        const redirect = card.getAttribute('data-redirect');
+        const gameId = card.getAttribute('data-game');
+
+        if (!isLoggedIn()) {
+            openLogin(redirect || null);
+            e.preventDefault();
+            return;
+        }
+
+        if (redirect) {
+            window.location.href = redirect;
+            return;
+        }
+
+        // Oyun yakında
+        e.preventDefault();
+    });
+
+    // --- Sağ üst kullanıcı amblemi ---
+    function getLastUser() {
+        return localStorage.getItem('10BTV_last_user') || null;
+    }
+
+    try {
+        const loggedIn = isLoggedIn();
+        const wrap = document.getElementById('quickAuthWrap');
+        const btn = document.getElementById('quickAuthBtn');
+        const nameEl = document.getElementById('quickAuthName');
+        const drop = document.getElementById('quickAuthDrop');
+
+        if (loggedIn) {
+            if (wrap) wrap.style.display = 'block';
+            if (nameEl) nameEl.textContent = getLastUser() || '—';
+
+            if (btn && drop) {
+                btn.addEventListener('click', () => {
+                    drop.style.display = drop.style.display === 'block' ? 'none' : 'block';
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!wrap.contains(e.target)) {
+                        drop.style.display = 'none';
+                    }
+                });
+            }
+        }
+    } catch(e) {}
+</script>
+    <!-- Severshop Market Overlay kaldırıldı, severshop.html sayfasına taşındı -->
+    </div>
+
+    <!-- Hoşgeldin Ödülü Animasyonu (100 Altın) -->
+    <div id="rewardOverlay" class="reward-overlay">
+        <div class="reward-particles" id="rewardParticles"></div>
+        <div class="reward-card">
+            <div class="reward-coin">🪙</div>
+            <div class="reward-text">+100 ALTIN</div>
+            <div class="reward-subtext">Hoşgeldin hediyesi! 🎉<br>Severshop'ta kullanmak üzere 100 altın kazandın!</div>
+            <button class="reward-claim-btn" id="rewardClaimBtn" onclick="claimReward()">🎁 TOPLA</button>
+        </div>
+    </div>
+
+    <!-- Paket Açılış Animasyon Ekranı -->
+    <div id="packOpenOverlay" class="pack-open-overlay">
+        <h2 id="packOpenTitle" style="color: #fbbf24; font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; text-shadow: 0 0 20px rgba(251,191,36,0.5);">PAKET AÇILIYOR...</h2>
+        
+        <!-- CS:GO Rulet Alanı -->
+        <div class="roulette-container" id="rouletteContainer">
+            <div class="roulette-pointer"></div>
+            <div class="roulette-track" id="rouletteTrack"></div>
+        </div>
+
+        <!-- Çıkan Kartın Büyük Gösterimi -->
+        <div class="final-card-container" id="finalCardContainer">
+            <div class="pack-anim-card">
+                <div class="pack-back" id="packResultCardContainer" style="transform: none; position: relative;">
+                    <!-- Dinamik olarak doldurulacak -->
+                </div>
+            </div>
+            <button id="packCloseBtn" class="shop-close-btn" style="padding: 0.8rem 2rem; font-size: 1.1rem;" onclick="closePackReveal()">Koleksiyona Ekle & Kapat</button>
+        </div>
+    </div>
+
+    <script>
+        // Severshop Market Fonksiyonları
+        let userCoins = 100;
+
+        const REWARD_KEY = '10BTV_reward_claimed';
+
+        function isRewardClaimed() {
+            return localStorage.getItem(REWARD_KEY) === 'true';
+        }
+
+        function setRewardClaimed() {
+            localStorage.setItem(REWARD_KEY, 'true');
+        }
+
+        async function updateCoinsUI() {
+            try {
+                const res = await fetch('/api/coins');
+                const data = await res.json();
+                if (data.ok) {
+                    userCoins = data.coins;
+                    document.getElementById('shopCoinsVal').textContent = userCoins;
+                }
+            } catch (e) {
+                console.error("Altın bilgisi güncellenemedi:", e);
+            }
+        }
+
+        function spawnRewardParticles(count) {
+            const container = document.getElementById('rewardParticles');
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = Math.random() * 50 + '%';
+                p.style.animationDelay = Math.random() * 1 + 's';
+                p.style.width = (6 + Math.random() * 8) + 'px';
+                p.style.height = p.style.width;
+                p.style.background = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d'][Math.floor(Math.random() * 4)];
+                container.appendChild(p);
+                setTimeout(() => p.remove(), 3000);
+            }
+        }
+
+        async function openShop() {
+            document.getElementById('shopOverlay').classList.add('active');
+            await updateCoinsUI();
+
+            // coins 0 ve daha önce alınmamışsa ödülü göster
+            if (userCoins === 0 && !isRewardClaimed()) {
+                spawnRewardParticles(30);
+                document.getElementById('rewardOverlay').classList.add('active');
+            }
+        }
+
+        function closeShop() {
+            document.getElementById('shopOverlay').classList.remove('active');
+        }
+
+        async function claimReward() {
+            const btn = document.getElementById('rewardClaimBtn');
+            btn.disabled = true;
+            btn.textContent = 'Yükleniyor...';
+
+            try {
+                const res = await fetch('/api/claim-reward', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    userCoins = data.coins;
+                    document.getElementById('shopCoinsVal').textContent = userCoins;
+                    setRewardClaimed();
+                    btn.textContent = '✔ ALINDI';
+                    btn.style.background = '#22c55e';
+                    spawnRewardParticles(50);
+                    setTimeout(() => {
+                        document.getElementById('rewardOverlay').classList.remove('active');
+                    }, 1200);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = '🎁 TOPLA';
+                    if (data.message === 'Bu ödül zaten alınmış') {
+                        setRewardClaimed();
+                        document.getElementById('rewardOverlay').classList.remove('active');
+                    } else {
+                        alert(data.message || 'Ödül alınamadı.');
+                    }
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = '🎁 TOPLA';
+                alert('Bağlantı hatası');
+            }
+        }
+
+        let allPlayersList = [];
+
+        // Sayfa yüklendiğinde tüm oyuncuları çekelim ki rulette rastgele kartlar gösterebilelim
+        async function loadAllPlayersForRoulette() {
+            try {
+                const res = await fetch('/api/players');
+                const data = await res.json();
+                if (data.ok) {
+                    allPlayersList = data.players;
+                }
+            } catch (e) {
+                console.error("Oyuncu listesi yüklenemedi:", e);
+            }
+        }
+        loadAllPlayersForRoulette();
+
+        async function buyPack(packId) {
+            const prices = { 1: 50, 2: 300, 3: 1000, 4: 3000, 5: 10000 };
+            const price = prices[packId];
+            if (userCoins < price) {
+                alert("Yetersiz altın! Daha fazla altın kazanmalısın.");
+                return;
+            }
+
+            if (!confirm("Bu paketi satın almak istediğinize emin misiniz?")) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/buy-pack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ packId })
+                });
+                const data = await res.json();
+                if (!data.ok) {
+                    alert(data.message || "Paket satın alınamadı.");
+                    return;
+                }
+
+                // Altını güncelle
+                userCoins = data.coins;
+                document.getElementById('shopCoinsVal').textContent = userCoins;
+
+                // CS:GO Kasa Açma Ruletini Başlat
+                startRouletteReveal(data.player, data.isSpecial);
+            } catch (e) {
+                console.error(e);
+                alert("Bir hata oluştu!");
+            }
+        }
+
+        function startRouletteReveal(winnerPlayer, isSpecial) {
+            const overlay = document.getElementById('packOpenOverlay');
+            const title = document.getElementById('packOpenTitle');
+            const rouletteContainer = document.getElementById('rouletteContainer');
+            const track = document.getElementById('rouletteTrack');
+            const finalCardContainer = document.getElementById('finalCardContainer');
+            const container = document.getElementById('packResultCardContainer');
+
+            // Reset UI
+            overlay.classList.add('active');
+            title.textContent = "PAKET AÇILIYOR...";
+            rouletteContainer.style.display = 'flex';
+            finalCardContainer.classList.remove('active');
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+
+            // Rulet için 40 adet rastgele kart oluştur (CS:GO kasa açma mantığı)
+            const totalItems = 40;
+            const winnerIndex = 32; // Kazanan kartın duracağı indeks (sonlara yakın)
+            let trackHTML = '';
+
+            // Eğer veritabanından oyuncular yüklenemediyse fallback listesi oluştur
+            const pool = allPlayersList.length > 0 ? allPlayersList : [winnerPlayer];
+
+            for (let i = 0; i < totalItems; i++) {
+                let p = pool[Math.floor(Math.random() * pool.length)];
+                // Kazanan kartı tam hedef indekse koyuyoruz
+                if (i === winnerIndex) {
+                    p = winnerPlayer;
+                }
+
+                const bgClass = p.overall >= 85 ? 'gold' : p.overall >= 80 ? 'purple' : p.overall >= 75 ? 'blue' : p.overall >= 70 ? 'green' : 'grey';
+                const initials = p.name.split(/[\s.]+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+                trackHTML += `
+                    <div class="roulette-item fut-card-bg-${bgClass}">
+                        <div class="roulette-item-inner">
+                            <div style="display:flex; justify-content:space-between; width:100%; align-items:flex-start;">
+                                <span class="roulette-item-ovr">${p.overall}</span>
+                                <span class="roulette-item-pos">${p.pos}</span>
+                            </div>
+                            <div class="roulette-item-avatar">${initials}</div>
+                            <div class="roulette-item-name">${p.name}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            track.innerHTML = trackHTML;
+
+            // Genişlik hesaplamaları: Her kart 110px + 12px gap = 122px
+            const itemWidth = 122; 
+            // Kazanan kartın tam ortalanması için kayma miktarını hesapla (randomOffset kaldırıldı, tam ortalanması için 0 yapıldı)
+            const targetX = 400 - (winnerIndex * itemWidth + (itemWidth / 2));
+
+            // Tarayıcının DOM'u işlemesi için çok kısa bir süre bekle ve animasyonu başlat
+            setTimeout(() => {
+                track.style.transition = 'transform 6s cubic-bezier(0.1, 0.8, 0.15, 1)';
+                track.style.transform = `translateX(${targetX}px)`;
+            }, 100);
+
+            // 6 saniye sonra rulet durduğunda kazanan kartı büyük olarak göster
+            setTimeout(() => {
+                title.textContent = "TEBRİKLER! YENİ KART KAZANDINIZ!";
+                rouletteContainer.style.display = 'none';
+
+                // Büyük kartı oluştur
+                const bgClass = winnerPlayer.overall >= 85 ? 'gold' : winnerPlayer.overall >= 80 ? 'purple' : winnerPlayer.overall >= 75 ? 'blue' : winnerPlayer.overall >= 70 ? 'green' : 'grey';
+                const initials = winnerPlayer.name.split(/[\s.]+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                const stats = winnerPlayer.role === 'keeper' ? [
+                    { l: 'DIV', v: winnerPlayer.div || 50 },
+                    { l: 'HAN', v: winnerPlayer.han || 50 },
+                    { l: 'KIC', v: winnerPlayer.kic || 50 },
+                    { l: 'REF', v: winnerPlayer.ref || 50 },
+                    { l: 'SPD', v: winnerPlayer.spe || 50 },
+                    { l: 'POS', v: winnerPlayer.pos_stat || 50 }
+                ] : [
+                    { l: 'PAC', v: winnerPlayer.pac || 50 },
+                    { l: 'SHO', v: winnerPlayer.sho || 50 },
+                    { l: 'PAS', v: winnerPlayer.pas || 50 },
+                    { l: 'DRB', v: winnerPlayer.drb || 50 },
+                    { l: 'DEF', v: winnerPlayer.def || 50 },
+                    { l: 'PHY', v: winnerPlayer.pys || 50 }
+                ];
+
+                container.innerHTML = `
+                    <div class="fut-card fut-card-bg-${bgClass}">
+                        <div class="fut-inner">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <div class="fut-overall-num">${winnerPlayer.overall}</div>
+                                    <div class="fut-position">${winnerPlayer.pos}</div>
+                                </div>
+                                <div style="font-size: 1.5rem;">${isSpecial ? '⭐' : '⚽'}</div>
+                            </div>
+                            <div class="fut-avatar">${initials}</div>
+                            <div class="fut-name" style="font-size: 1.15rem; font-weight: 800; color: #fff; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,.4); margin: 0.5rem 0;">${winnerPlayer.name}</div>
+                            <div class="fut-hex-stats">
+                                ${stats.map(s => `
+                                    <div class="fut-hex">
+                                        <div class="fut-hex-label">${s.l}</div>
+                                        <div class="fut-hex-value">${s.v}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                finalCardContainer.classList.add('active');
+            }, 6200);
+        }
+
+        function closePackReveal() {
+            document.getElementById('packOpenOverlay').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
+
+
