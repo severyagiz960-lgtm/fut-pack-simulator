@@ -207,7 +207,7 @@
       }
 
       try {
-        // 1) ÖNCE: Backend API (Vercel/Supabase) ile kayıt dene
+        // 1) ÖNCE: Backend API (Cloudflare/Supabase) ile kayıt dene
         setStatus('Hesap oluşturuluyor...', '');
 
         const regResp = await fetch('/api/register', {
@@ -220,8 +220,12 @@
         const regData = await regResp.json().catch(() => null);
 
         if (!regResp.ok || !regData || regData.ok === false) {
-          // API varsa ama hata döndüyse
-          setStatus(regData?.message || regData?.error || 'Kayıt başarısız.', 'error');
+          // API hata döndü (503, 409 vb.) -> localStorage fallback
+          saveUserToLocal(u, p);
+          localStorage.setItem(AUTH_KEY, 'true');
+          try { localStorage.setItem('10BTV_last_user', u); } catch (ex) {}
+          setStatus('Hesap oluşturuldu (yerel). Ana sayfaya yönlendiriliyor...', 'ok');
+          setTimeout(() => { window.location.href = 'index.html'; }, 600);
           return;
         }
 
@@ -254,9 +258,7 @@
 
       } catch (err) {
         console.error(err);
-        // API bağlantı hatası -> localStorage fallback
-        setStatus('Sunucuya bağlanılamadı. Yerel kayıt yapılıyor...', '');
-
+        // API bağlantı hatası (network error) -> localStorage fallback
         saveUserToLocal(u, p);
         localStorage.setItem(AUTH_KEY, 'true');
         try { localStorage.setItem('10BTV_last_user', u); } catch (ex) {}

@@ -147,14 +147,20 @@
       statusEl.className = 'status' + (type ? (' ' + type) : '');
     }
 
-    // Backend API ile giriş (hem local Express hem Netlify Functions/Supabase)
+    // Backend API ile giriş (Cloudflare Pages Functions / Supabase)
+    // 3 saniye timeout - bağlantı yoksa localStorage fallback'e düş
     async function backendLogin(username, password) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
       const r = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
-        credentials: 'include'
-      });
+        credentials: 'include',
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+      
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.ok) throw new Error(data?.message || 'Kullanıcı adı veya parola hatalı.');
       return data;
