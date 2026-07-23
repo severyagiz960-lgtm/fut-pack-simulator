@@ -172,6 +172,11 @@ const API = { credentials: 'include' };
 async function fetchMe(){const r=await fetch('/api/me',API).catch(()=>null);if(!r)return null;return r.json().catch(()=>null);}
 async function loginAs(u,p){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p}),credentials:'include'});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d?.message||'Giriş başarısız');return d;}
 
+// LocalStorage fallback: admin girişi
+function localAdminLogin(username, password) {
+  return username === 'admin' && password === '1234';
+}
+
 // Elements
 const $=id=>document.getElementById(id);
 const gateOverlay=$('adminOverlay'),adminClose=$('adminClose'),adminLoginBtn=$('adminLoginBtn');
@@ -188,7 +193,23 @@ adminLoginBtn.onclick=async()=>{
   const u=(adminUserEl.value||'').trim(),p=adminPassEl.value||'';
   if(!u||!p){setGateStatus('Kullanıcı adı ve parola gir.','error');return;}
   setGateStatus('Giriş yapılıyor...');
-  try{await loginAs(u,p);setGateStatus('Başarılı.','ok');closeGate();loadUsers();loadPlayers();}catch(e){setGateStatus(e.message||'Hata','error');}
+  try{
+    await loginAs(u,p);
+    setGateStatus('Başarılı.','ok');
+    closeGate();
+    loadUsers();
+    loadPlayers();
+  }catch(e){
+    // API başarısız olursa localStorage fallback dene
+    if(localAdminLogin(u,p)){
+      setGateStatus('Başarılı (yerel).','ok');
+      closeGate();
+      loadUsers();
+      loadPlayers();
+    }else{
+      setGateStatus(e.message||'Hata','error');
+    }
+  }
 };
 adminPassEl.onkeydown=e=>{if(e.key==='Enter')adminLoginBtn.click();};
 

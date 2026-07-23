@@ -166,12 +166,28 @@
       if (username === 'admin' && password === '1234') {
         return { ok: true, username: 'admin', isAdmin: true };
       }
-      // Normal kullanıcı (hesap-olustur.html eski sürümde localStorage'a kaydeder)
+      // Normal kullanıcı (hesap-olustur.html localStorage'a kaydeder)
       const savedPass = localStorage.getItem('10BTV_user_' + username);
       if (savedPass !== null && savedPass === password) {
         return { ok: true, username: username, isAdmin: false };
       }
       return null;
+    }
+
+    // localStorage'daki kullanıcı listesini admin panele yönlendirme için kontrol et
+    function getLocalUsers() {
+      try {
+        return JSON.parse(localStorage.getItem('10BTV_users_list') || '[]');
+      } catch { return []; }
+    }
+
+    // Eğer hiç kullanıcı yoksa ve admin girişi yapıldıysa, kullanıcı listesine admini ekle
+    function ensureAdminInLocalList() {
+      const users = getLocalUsers();
+      if (!users.includes('admin')) {
+        users.push('admin');
+        localStorage.setItem('10BTV_users_list', JSON.stringify(users));
+      }
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
