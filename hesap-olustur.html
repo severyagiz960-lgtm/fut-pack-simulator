@@ -154,9 +154,9 @@
     </div>
   </div>
 
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-    const AUTH_KEY = '10BTV_logged_in';
-
     const statusEl = document.getElementById('status');
     const usernameEl = document.getElementById('username');
     const passwordEl = document.getElementById('password');
@@ -191,80 +191,31 @@
         return;
       }
 
-      // LocalStorage fallback: kullanıcıyı kaydet
-      function saveUserToLocal(username, password) {
-        try {
-          localStorage.setItem('10BTV_user_' + username, password);
-          const existing = JSON.parse(localStorage.getItem('10BTV_users_list') || '[]');
-          if (!existing.includes(username)) {
-            existing.push(username);
-            localStorage.setItem('10BTV_users_list', JSON.stringify(existing));
-          }
-          return true;
-        } catch (ex) {
-          return false;
-        }
-      }
+      setStatus('Hesap oluşturuluyor...', '');
 
       try {
-        // 1) ÖNCE: Backend API (Cloudflare/Supabase) ile kayıt dene
-        setStatus('Hesap oluşturuluyor...', '');
-
-        const regResp = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: u, password: p }),
-          credentials: 'include'
-        });
-
-        const regData = await regResp.json().catch(() => null);
-
-        if (!regResp.ok || !regData || regData.ok === false) {
-          // API hata döndü (503, 409 vb.) -> localStorage fallback
-          saveUserToLocal(u, p);
-          localStorage.setItem(AUTH_KEY, 'true');
-          try { localStorage.setItem('10BTV_last_user', u); } catch (ex) {}
-          setStatus('Hesap oluşturuldu (yerel). Ana sayfaya yönlendiriliyor...', 'ok');
-          setTimeout(() => { window.location.href = 'index.html'; }, 600);
+        // Supabase Auth ile kayıt
+        const result = await window.SB.register(u, p);
+        
+        if (!result.ok) {
+          setStatus(result.message || 'Kayıt başarısız.', 'error');
           return;
         }
 
-        // API başarılı -> otomatik giriş dene
-        setStatus('Giriş yapılıyor...', '');
-
-        const loginResp = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: u, password: p }),
-          credentials: 'include'
-        });
-
-        const loginData = await loginResp.json().catch(() => ({}));
-
-        // Yine de localStorage'a yedek kaydet
-        saveUserToLocal(u, p);
-
-        if (!loginResp.ok || !loginData.ok) {
+        // Otomatik giriş yap
+        const loginResult = await window.SB.login(u, p);
+        
+        if (loginResult.ok) {
+          localStorage.setItem('10BTV_last_user', u);
+          setStatus('Kayıt başarılı. Ana sayfaya yönlendiriliyor...', 'ok');
+          setTimeout(() => { window.location.href = 'index.html'; }, 700);
+        } else {
           setStatus('Kayıt başarılı. Giriş sayfasına yönlendiriliyor...', 'ok');
-          setTimeout(() => { window.location.href = 'giris.html'; }, 600);
-          return;
+          setTimeout(() => { window.location.href = 'giris.html'; }, 700);
         }
-
-        localStorage.setItem(AUTH_KEY, 'true');
-        try { localStorage.setItem('10BTV_last_user', loginData.username || u); } catch (ex) {}
-
-        setStatus('Kayıt başarılı. Ana sayfaya yönlendiriliyor...', 'ok');
-        setTimeout(() => { window.location.href = 'index.html'; }, 500);
-
       } catch (err) {
         console.error(err);
-        // API bağlantı hatası (network error) -> localStorage fallback
-        saveUserToLocal(u, p);
-        localStorage.setItem(AUTH_KEY, 'true');
-        try { localStorage.setItem('10BTV_last_user', u); } catch (ex) {}
-
-        setStatus('Yerel kayıt başarılı. Ana sayfaya yönlendiriliyor...', 'ok');
-        setTimeout(() => { window.location.href = 'index.html'; }, 600);
+        setStatus('Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
       }
     });
   </script>

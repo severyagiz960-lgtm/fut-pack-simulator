@@ -344,10 +344,10 @@
         </div>
     </div>
 
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
     <script>
     (function(){
-        const AUTH_KEY = '10BTV_logged_in';
-
         function setUI(loggedIn, username) {
             const loginBtn = document.getElementById('quickLoginBtn');
             const regBtn = document.getElementById('quickRegisterBtn');
@@ -366,24 +366,29 @@
             }
         }
 
-        // Backend'e sor
-        fetch('/api/me', { credentials: 'include' })
-            .then(r => r.json())
-            .then(d => {
-                if (d && d.ok) {
-                    localStorage.setItem(AUTH_KEY, 'true');
-                    if (d.username) localStorage.setItem('10BTV_last_user', d.username);
-                    setUI(true, d.username);
+        // Supabase oturum kontrolü
+        async function checkSession() {
+            try {
+                const session = await window.SB.getCurrentUser();
+                if (session) {
+                    setUI(true, session.username);
                 } else {
-                    checkLocal();
+                    setUI(false);
                 }
-            })
-            .catch(() => checkLocal());
-
-        function checkLocal() {
-            const loggedIn = localStorage.getItem(AUTH_KEY) === 'true';
-            setUI(loggedIn, loggedIn ? localStorage.getItem('10BTV_last_user') || '—' : null);
+            } catch(e) {
+                setUI(false);
+            }
         }
+
+        // Supabase hazır olana kadar bekle
+        function waitForSupabase() {
+            if (window.SB) {
+                checkSession();
+            } else {
+                setTimeout(waitForSupabase, 300);
+            }
+        }
+        setTimeout(waitForSupabase, 500);
 
         // Dropdown
         const btn = document.getElementById('quickUserBtn');
@@ -402,14 +407,11 @@
         const logoutBtn = document.getElementById('quickLogoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
-                localStorage.setItem(AUTH_KEY, 'false');
-                localStorage.removeItem('10BTV_last_user');
                 try {
-                    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+                    await window.SB.logout();
                 } catch(e) {}
                 if (drop) drop.classList.remove('show');
                 setUI(false);
-                // Sayfayı yeniden yüklemeden güncelle
                 window.location.reload();
             });
         }
@@ -501,10 +503,9 @@ let fieldPlayers = [], keepers = [], allPlayers = [];
 
 async function loadPlayersFromAPI() {
     try {
-        const r = await fetch('/api/players');
-        const data = await r.json();
-        if (!data.ok || !data.players) throw new Error('Hata');
-        const raw = data.players.map(p => {
+        const result = await window.SB.getPlayers();
+        if (!result || !result.ok || !result.players) throw new Error('Hata');
+        const raw = result.players.map(p => {
             const valStr = p.value + 'M€';
             let ratings = [];
             try { ratings = JSON.parse(p.ratings || '[]'); } catch(e) {}

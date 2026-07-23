@@ -301,15 +301,38 @@
         </div>
     </div>
 
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
     <script>
         let allMyCards = [];
 
+        async function getCurrentUserId() {
+            try {
+                const session = await window.SB.getCurrentUser();
+                return session ? session.userId : null;
+            } catch(e) {
+                return null;
+            }
+        }
+
         async function loadMyCards() {
             const grid = document.getElementById('cardsGrid');
+
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                grid.innerHTML = `
+                    <div class="no-cards">
+                        <p>Koleksiyonunu görmek için giriş yapmalısın!</p>
+                        <button class="no-cards-btn" onclick="window.location.href='giris.html'">🔑 Giriş Yap</button>
+                    </div>
+                `;
+                document.getElementById('cardCountVal').textContent = "0";
+                return;
+            }
+
             try {
-                const res = await fetch('/api/mycards');
-                const data = await res.json();
-                if (!data.ok || !data.cards || data.cards.length === 0) {
+                const result = await window.SB.getMyCards(userId);
+                if (!result || !result.ok || !result.cards || result.cards.length === 0) {
                     grid.innerHTML = `
                         <div class="no-cards">
                             <p>Henüz hiç kart çıkartmamışsın!</p>
@@ -320,7 +343,7 @@
                     return;
                 }
 
-                allMyCards = data.cards;
+                allMyCards = result.cards;
                 document.getElementById('cardCountVal').textContent = allMyCards.length;
                 renderMyCards();
             } catch (e) {

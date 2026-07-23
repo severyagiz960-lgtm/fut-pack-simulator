@@ -304,15 +304,30 @@
         </div>
     </div>
 
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
     <script>
         let userCoins = 100;
 
-        async function loadCoins() {
+        async function getCurrentUserId() {
             try {
-                const res = await fetch('/api/coins');
-                const data = await res.json();
-                if (data.ok) {
-                    userCoins = data.coins;
+                const session = await window.SB.getCurrentUser();
+                return session ? session.userId : null;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        async function loadCoins() {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                document.getElementById('shopCoinsVal').textContent = "Giriş yap";
+                return;
+            }
+            try {
+                const result = await window.SB.getCoins(userId);
+                if (result.ok) {
+                    userCoins = result.coins;
                     document.getElementById('shopCoinsVal').textContent = userCoins;
                 }
             } catch (e) {
@@ -321,6 +336,13 @@
         }
 
         async function buyPack(packId) {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                alert("Lütfen önce giriş yapın!");
+                window.location.href = 'giris.html';
+                return;
+            }
+
             const prices = { 1: 50, 2: 300, 3: 1000, 4: 3000, 5: 10000 };
             const price = prices[packId] || 0;
 
@@ -334,23 +356,18 @@
             }
 
             try {
-                const res = await fetch('/api/buy-pack', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ packId })
-                });
-                const data = await res.json();
-                if (!data.ok) {
-                    alert(data.message || "Paket satın alınamadı.");
+                const result = await window.SB.openPack(userId, packId);
+                if (!result.ok) {
+                    alert(result.message || "Paket satın alınamadı.");
                     return;
                 }
 
                 // Altını güncelle
-                userCoins = data.coins;
+                userCoins = result.coins;
                 document.getElementById('shopCoinsVal').textContent = userCoins;
 
                 // Tebrik mesajı ve çıkan oyuncuyu göster
-                const p = data.player;
+                const p = result.player;
                 if (p) {
                     alert(`🎉 Tebrikler! Paketten ${p.name} (${p.overall} OVR - ${p.pos}) çıktı! Kart koleksiyonunuza eklendi.`);
                 } else {
@@ -362,8 +379,15 @@
             }
         }
 
-        // Sayfa açıldığında güncel altını çek
-        loadCoins();
+        // Supabase hazır olunca altını yükle
+        function waitAndLoad() {
+            if (window.SB) {
+                loadCoins();
+            } else {
+                setTimeout(waitAndLoad, 300);
+            }
+        }
+        setTimeout(waitAndLoad, 500);
     </script>
 </body>
 

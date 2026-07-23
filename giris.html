@@ -135,9 +135,9 @@
     </div>
   </div>
 
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-    const AUTH_KEY = '10BTV_logged_in';
-
     const statusEl = document.getElementById('status');
     const usernameEl = document.getElementById('username');
     const passwordEl = document.getElementById('password');
@@ -145,55 +145,6 @@
     function setStatus(msg, type) {
       statusEl.textContent = msg;
       statusEl.className = 'status' + (type ? (' ' + type) : '');
-    }
-
-    // Backend API ile giriş (Cloudflare Pages Functions / Supabase)
-    // 3 saniye timeout - bağlantı yoksa localStorage fallback'e düş
-    async function backendLogin(username, password) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
-      const r = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeoutId));
-      
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok || !data.ok) throw new Error(data?.message || 'Kullanıcı adı veya parola hatalı.');
-      return data;
-    }
-
-    // Offline fallback: localStorage'daki kayıtlı kullanıcılar
-    function localLogin(username, password) {
-      // Yönetici hesabı
-      if (username === 'admin' && password === '1234') {
-        return { ok: true, username: 'admin', isAdmin: true };
-      }
-      // Normal kullanıcı (hesap-olustur.html localStorage'a kaydeder)
-      const savedPass = localStorage.getItem('10BTV_user_' + username);
-      if (savedPass !== null && savedPass === password) {
-        return { ok: true, username: username, isAdmin: false };
-      }
-      return null;
-    }
-
-    // localStorage'daki kullanıcı listesini admin panele yönlendirme için kontrol et
-    function getLocalUsers() {
-      try {
-        return JSON.parse(localStorage.getItem('10BTV_users_list') || '[]');
-      } catch { return []; }
-    }
-
-    // Eğer hiç kullanıcı yoksa ve admin girişi yapıldıysa, kullanıcı listesine admini ekle
-    function ensureAdminInLocalList() {
-      const users = getLocalUsers();
-      if (!users.includes('admin')) {
-        users.push('admin');
-        localStorage.setItem('10BTV_users_list', JSON.stringify(users));
-      }
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -210,29 +161,23 @@
       setStatus('Giriş yapılıyor...', '');
 
       try {
-        // ÖNCE: Backend API (Supabase / Express) ile giriş dene
-        const data = await backendLogin(u, p);
-        localStorage.setItem(AUTH_KEY, 'true');
-        try { localStorage.setItem('10BTV_last_user', data.username || u); } catch (ex) {}
+        // Supabase Auth ile giriş
+        const result = await window.SB.login(u, p);
+        
+        if (!result.ok) {
+          setStatus(result.message || 'Giriş başarısız.', 'error');
+          return;
+        }
 
+        localStorage.setItem('10BTV_last_user', result.username);
         setStatus('Giriş başarılı. Yönlendiriliyor...', 'ok');
 
         setTimeout(() => {
-          window.location.href = data.isAdmin ? 'admin-kullanici-listesi.html' : 'index.html';
+          window.location.href = result.isAdmin ? 'admin-kullanici-listesi.html' : 'index.html';
         }, 700);
       } catch (err) {
-        // Backend yanıt vermezse (offline / Netlify dev) localStorage fallback
-        const local = localLogin(u, p);
-        if (local) {
-          localStorage.setItem(AUTH_KEY, 'true');
-          try { localStorage.setItem('10BTV_last_user', local.username); } catch (ex) {}
-          setStatus('Giriş başarılı (yerel). Yönlendiriliyor...', 'ok');
-          setTimeout(() => {
-            window.location.href = local.isAdmin ? 'admin-kullanici-listesi.html' : 'index.html';
-          }, 700);
-          return;
-        }
-        setStatus(err.message || 'Kullanıcı adı veya parola hatalı.', 'error');
+        console.error(err);
+        setStatus('Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
       }
     });
   </script>

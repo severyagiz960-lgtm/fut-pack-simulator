@@ -167,24 +167,26 @@
   </div>
 </div>
 
+<script src="supabase-config.js"></script>
+<script src="supabase-client.js"></script>
 <script>
-const API = { credentials: 'include' };
 const ADMIN_AUTH_KEY = '10BTV_admin_auth';
 
 async function fetchMe(){
-  // Önce localStorage'da admin girişi var mı kontrol et
+  // Supabase oturumu kontrol et
+  try {
+    const session = await window.SB.getCurrentUser();
+    if (session && session.isAdmin) {
+      localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+      return { ok: true, username: session.username, isAdmin: true };
+    }
+  } catch(e) {}
+  
+  // localStorage fallback
   if(localStorage.getItem(ADMIN_AUTH_KEY) === 'true'){
     return { ok: true, username: 'admin', isAdmin: true };
   }
-  // API'den dene
-  const r=await fetch('/api/me',API).catch(()=>null);
-  if(!r)return null;
-  const data = await r.json().catch(()=>null);
-  if(data && data.ok && data.isAdmin){
-    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    return data;
-  }
-  return data;
+  return null;
 }
 
 async function loginAs(u,p){
@@ -193,24 +195,26 @@ async function loginAs(u,p){
     localStorage.setItem(ADMIN_AUTH_KEY, 'true');
     return { ok: true, username: 'admin', isAdmin: true };
   }
-  // API'den dene
-  const r=await fetch('/api/login',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username:u,password:p}),
-    credentials:'include'
-  }).catch(()=>null);
-  if(!r){throw new Error('Sunucuya bağlanılamadı');}
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok||!d.ok)throw new Error(d?.message||'Giriş başarısız');
-  if(d.isAdmin) localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-  return d;
+  // Supabase Auth ile giriş dene
+  try {
+    const result = await window.SB.login(u, p);
+    if (result.ok && result.isAdmin) {
+      localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+      return result;
+    }
+    if (result.ok && !result.isAdmin) {
+      throw new Error('Bu hesap admin yetkisine sahip değil.');
+    }
+    throw new Error('Kullanıcı adı veya parola hatalı.');
+  } catch(e) {
+    throw new Error(e.message || 'Giriş başarısız');
+  }
 }
 
 // Çıkış
 async function logout(){
   localStorage.removeItem(ADMIN_AUTH_KEY);
-  await fetch('/api/logout', {method:'POST', credentials:'include'}).catch(()=>{});
+  try { await window.SB.logout(); } catch(e) {}
 }
 
 // Elements

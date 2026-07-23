@@ -791,30 +791,9 @@
     </div>
 </div>
 
+<script src="supabase-config.js"></script>
+<script src="supabase-client.js"></script>
 <script>
-    // Backend cookie auth
-    const AUTH_KEY = "10BTV_logged_in";
-
-    function isLoggedIn() {
-        return localStorage.getItem(AUTH_KEY) === 'true';
-    }
-
-    function setLoggedIn(val) {
-        localStorage.setItem(AUTH_KEY, val ? "true" : "false");
-    }
-
-    async function backendLogin(username, password) {
-        const r = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-            credentials: 'include'
-        });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok || !data.ok) throw new Error(data?.message || 'Giriş başarısız');
-        return data;
-    }
-
     const overlay = document.getElementById('loginOverlay');
     const statusEl = document.getElementById('loginStatus');
     const usernameEl = document.getElementById('username');
@@ -862,10 +841,13 @@
         showStatus('Giriş yapılıyor...', '');
 
         try {
-            // Önce backend API'ye dene
-            const data = await backendLogin(u, p);
-            setLoggedIn(true);
-            try { localStorage.setItem('10BTV_last_user', data.username || u); } catch(e) {}
+            // Supabase Auth ile giriş
+            const result = await window.SB.login(u, p);
+            
+            if (!result.ok) {
+                showStatus(result.message || 'Giriş başarısız.', 'error');
+                return;
+            }
 
             closeLogin();
             showStatus("Giriş başarılı.", "ok");
@@ -876,31 +858,28 @@
                 window.location.href = url;
             }
         } catch (err) {
-            // Backend çalışmıyorsa yerel giriş
-            if (u === 'admin' && p === '1234') {
-                setLoggedIn(true);
-                try { localStorage.setItem('10BTV_last_user', 'admin'); } catch(e) {}
-                closeLogin();
-                showStatus("Giriş başarılı (yerel).", "ok");
-                if (pendingRedirect) {
-                    const url = pendingRedirect;
-                    pendingRedirect = null;
-                    window.location.href = url;
-                }
-                return;
-            }
             showStatus(err.message || 'Kullanıcı adı veya parola hatalı.', 'error');
         }
     });
 
-    document.getElementById('games').addEventListener('click', (e) => {
+    async function isLoggedIn() {
+        try {
+            const session = await window.SB.getCurrentUser();
+            return !!session;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    document.getElementById('games').addEventListener('click', async (e) => {
         const card = e.target.closest('.game-card');
         if (!card) return;
 
         const redirect = card.getAttribute('data-redirect');
         const gameId = card.getAttribute('data-game');
 
-        if (!isLoggedIn()) {
+        const loggedIn = await isLoggedIn();
+        if (!loggedIn) {
             openLogin(redirect || null);
             e.preventDefault();
             return;
@@ -911,37 +890,42 @@
             return;
         }
 
-        // Oyun yakında
         e.preventDefault();
     });
 
     // --- Sağ üst kullanıcı amblemi ---
-    function getLastUser() {
-        return localStorage.getItem('10BTV_last_user') || null;
-    }
-
     try {
-        const loggedIn = isLoggedIn();
         const wrap = document.getElementById('quickAuthWrap');
         const btn = document.getElementById('quickAuthBtn');
         const nameEl = document.getElementById('quickAuthName');
         const drop = document.getElementById('quickAuthDrop');
 
-        if (loggedIn) {
-            if (wrap) wrap.style.display = 'block';
-            if (nameEl) nameEl.textContent = getLastUser() || '—';
-
-            if (btn && drop) {
-                btn.addEventListener('click', () => {
-                    drop.style.display = drop.style.display === 'block' ? 'none' : 'block';
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!wrap.contains(e.target)) {
-                        drop.style.display = 'none';
-                    }
-                });
+        async function updateUI() {
+            const session = await window.SB.getCurrentUser();
+            if (session) {
+                if (wrap) wrap.style.display = 'block';
+                if (nameEl) nameEl.textContent = session.username || '—';
             }
+        }
+
+        function waitForSB() {
+            if (window.SB) {
+                updateUI();
+            } else {
+                setTimeout(waitForSB, 300);
+            }
+        }
+        setTimeout(waitForSB, 500);
+
+        if (btn && drop) {
+            btn.addEventListener('click', () => {
+                drop.style.display = drop.style.display === 'block' ? 'none' : 'block';
+            });
+            document.addEventListener('click', (e) => {
+                if (!wrap.contains(e.target)) {
+                    drop.style.display = 'none';
+                }
+            });
         }
     } catch(e) {}
 </script>
@@ -981,152 +965,33 @@
     </div>
 
     <script>
-        // Severshop Market Fonksiyonları
-        let userCoins = 100;
-
-        const REWARD_KEY = '10BTV_reward_claimed';
-
-        function isRewardClaimed() {
-            return localStorage.getItem(REWARD_KEY) === 'true';
-        }
-
-        function setRewardClaimed() {
-            localStorage.setItem(REWARD_KEY, 'true');
-        }
-
-        async function updateCoinsUI() {
-            try {
-                const res = await fetch('/api/coins');
-                const data = await res.json();
-                if (data.ok) {
-                    userCoins = data.coins;
-                    document.getElementById('shopCoinsVal').textContent = userCoins;
-                }
-            } catch (e) {
-                console.error("Altın bilgisi güncellenemedi:", e);
-            }
-        }
-
-        function spawnRewardParticles(count) {
-            const container = document.getElementById('rewardParticles');
-            container.innerHTML = '';
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.top = Math.random() * 50 + '%';
-                p.style.animationDelay = Math.random() * 1 + 's';
-                p.style.width = (6 + Math.random() * 8) + 'px';
-                p.style.height = p.style.width;
-                p.style.background = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d'][Math.floor(Math.random() * 4)];
-                container.appendChild(p);
-                setTimeout(() => p.remove(), 3000);
-            }
-        }
-
-        async function openShop() {
-            document.getElementById('shopOverlay').classList.add('active');
-            await updateCoinsUI();
-
-            // coins 0 ve daha önce alınmamışsa ödülü göster
-            if (userCoins === 0 && !isRewardClaimed()) {
-                spawnRewardParticles(30);
-                document.getElementById('rewardOverlay').classList.add('active');
-            }
-        }
-
-        function closeShop() {
-            document.getElementById('shopOverlay').classList.remove('active');
-        }
-
-        async function claimReward() {
-            const btn = document.getElementById('rewardClaimBtn');
-            btn.disabled = true;
-            btn.textContent = 'Yükleniyor...';
-
-            try {
-                const res = await fetch('/api/claim-reward', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                if (data.ok) {
-                    userCoins = data.coins;
-                    document.getElementById('shopCoinsVal').textContent = userCoins;
-                    setRewardClaimed();
-                    btn.textContent = '✔ ALINDI';
-                    btn.style.background = '#22c55e';
-                    spawnRewardParticles(50);
-                    setTimeout(() => {
-                        document.getElementById('rewardOverlay').classList.remove('active');
-                    }, 1200);
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = '🎁 TOPLA';
-                    if (data.message === 'Bu ödül zaten alınmış') {
-                        setRewardClaimed();
-                        document.getElementById('rewardOverlay').classList.remove('active');
-                    } else {
-                        alert(data.message || 'Ödül alınamadı.');
-                    }
-                }
-            } catch (e) {
-                btn.disabled = false;
-                btn.textContent = '🎁 TOPLA';
-                alert('Bağlantı hatası');
-            }
-        }
-
+        // NOT: Bu kodlar oyunlar.html içindeki severshop overlay için
+        // Gerçek severshop severshop.html sayfasında Supabase ile çalışır
         let allPlayersList = [];
 
         // Sayfa yüklendiğinde tüm oyuncuları çekelim ki rulette rastgele kartlar gösterebilelim
         async function loadAllPlayersForRoulette() {
             try {
-                const res = await fetch('/api/players');
-                const data = await res.json();
-                if (data.ok) {
-                    allPlayersList = data.players;
+                const result = await window.SB.getPlayers();
+                if (result && result.ok) {
+                    allPlayersList = result.players;
                 }
             } catch (e) {
                 console.error("Oyuncu listesi yüklenemedi:", e);
             }
         }
-        loadAllPlayersForRoulette();
+        function waitForSBAndLoad() {
+            if (window.SB) {
+                loadAllPlayersForRoulette();
+            } else {
+                setTimeout(waitForSBAndLoad, 300);
+            }
+        }
+        setTimeout(waitForSBAndLoad, 500);
 
         async function buyPack(packId) {
-            const prices = { 1: 50, 2: 300, 3: 1000, 4: 3000, 5: 10000 };
-            const price = prices[packId];
-            if (userCoins < price) {
-                alert("Yetersiz altın! Daha fazla altın kazanmalısın.");
-                return;
-            }
-
-            if (!confirm("Bu paketi satın almak istediğinize emin misiniz?")) {
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/buy-pack', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ packId })
-                });
-                const data = await res.json();
-                if (!data.ok) {
-                    alert(data.message || "Paket satın alınamadı.");
-                    return;
-                }
-
-                // Altını güncelle
-                userCoins = data.coins;
-                document.getElementById('shopCoinsVal').textContent = userCoins;
-
-                // CS:GO Kasa Açma Ruletini Başlat
-                startRouletteReveal(data.player, data.isSpecial);
-            } catch (e) {
-                console.error(e);
-                alert("Bir hata oluştu!");
-            }
+            // severshop.html sayfasına yönlendir
+            window.location.href = 'severshop.html';
         }
 
         function startRouletteReveal(winnerPlayer, isSpecial) {

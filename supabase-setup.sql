@@ -1,21 +1,28 @@
 -- =============================================
--- 10BTV - Supabase Tablo Kurulumu
+-- 10BTV - Supabase Tablo Kurulumu + RLS + Fonksiyonlar
 -- =============================================
 -- Bu SQL'i Supabase SQL Editor'da çalıştır.
 -- https://supabase.com > SQL Editor > New Query
+-- =============================================
 
--- 1) USERS TABLOSU (zaten varsa atla)
+-- 1) EXTENSIONS
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =============================================
+-- TABLOLAR
+-- =============================================
+
+-- USERS TABLOSU
 CREATE TABLE IF NOT EXISTS users (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
   is_admin INTEGER DEFAULT 0,
   coins INTEGER DEFAULT 0,
-  reward_claimed INTEGER DEFAULT 0
+  reward_claimed INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2) PLAYERS TABLOSU (oyuncular)
+-- PLAYERS TABLOSU (oyuncular)
 CREATE TABLE IF NOT EXISTS players (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name TEXT NOT NULL,
@@ -42,14 +49,154 @@ CREATE TABLE IF NOT EXISTS players (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3) USER_CARDS TABLOSU (kullanıcı kartları)
+-- USER_CARDS TABLOSU (kullanıcı kartları)
 CREATE TABLE IF NOT EXISTS user_cards (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
   opened_at TIMESTAMPTZ DEFAULT NOW(),
   is_special INTEGER DEFAULT 0
 );
+
+-- =============================================
+-- RLS (ROW LEVEL SECURITY)
+-- =============================================
+
+-- USERS RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Herkes kullanıcı oluşturabilir (insert)
+CREATE POLICY "users_insert_policy" ON users
+  FOR INSERT WITH CHECK (true);
+
+-- Kullanıcı kendi bilgilerini görebilir
+CREATE POLICY "users_select_own" ON users
+  FOR SELECT USING (auth.uid() = id);
+
+-- Admin herkesi görebilir
+CREATE POLICY "users_select_admin" ON users
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- Kullanıcı kendi coinini güncelleyebilir (sadece artırma)
+CREATE POLICY "users_update_own_coins" ON users
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Admin her şeyi güncelleyebilir
+CREATE POLICY "users_update_admin" ON users
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- Admin silebilir
+CREATE POLICY "users_delete_admin" ON users
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- PLAYERS RLS
+ALTER TABLE players ENABLE ROW LEVEL SECURITY;
+
+-- Herkes oyuncuları görebilir
+CREATE POLICY "players_select_all" ON players
+  FOR SELECT USING (true);
+
+-- Admin oyuncu ekleyebilir
+CREATE POLICY "players_insert_admin" ON players
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- Admin oyuncu güncelleyebilir
+CREATE POLICY "players_update_admin" ON players
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- Admin oyuncu silebilir
+CREATE POLICY "players_delete_admin" ON players
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- USER_CARDS RLS
+ALTER TABLE user_cards ENABLE ROW LEVEL SECURITY;
+
+-- Kullanıcı kendi kartlarını görebilir
+CREATE POLICY "user_cards_select_own" ON user_cards
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Admin tüm kartları görebilir
+CREATE POLICY "user_cards_select_admin" ON user_cards
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- Kullanıcı kendi kartını ekleyebilir
+CREATE POLICY "user_cards_insert_own" ON user_cards
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Admin kart silebilir
+CREATE POLICY "user_cards_delete_admin" ON user_cards
+  FOR DELETE USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_admin = 1)
+  );
+
+-- =============================================
+-- FONKSİYONLAR
+-- =============================================
+
+-- Kullanıcı coinini getir
+CREATE OR REPLACE FUNCTION get_user_coins()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  user_coins INTEGER;
+BEGIN
+  SELECT coins INTO user_coins FROM users WHERE id = auth.uid();
+  RETURN COALESCE(user_coins, 0);
+END;
+$$;
+
+-- Coin güncelle
+CREATE OR REPLACE FUNCTION update_user_coins(new_coins INTEGER)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE users SET coins = new_coins WHERE id = auth.uid();
+  RETURN FOUND;
+END;
+$$;
+
+-- Ödül talep et (hoşgeldin 100 altın)
+CREATE OR REPLACE FUNCTION claim_reward()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  current_coins INTEGER;
+  current_claimed INTEGER;
+BEGIN
+  SELECT coins, reward_claimed INTO current_coins, current_claimed
+  FROM users WHERE id = auth.uid();
+  
+  IF current_claimed = 1 THEN
+    RETURN -1; -- Zaten alınmış
+  END IF;
+  
+  UPDATE users 
+  SET coins = COALESCE(current_coins, 0) + 100, reward_claimed = 1
+  WHERE id = auth.uid();
+  
+  RETURN COALESCE(current_coins, 0) + 100;
+END;
+$$;
 
 -- =============================================
 -- VARSAYILAN OYUNCULARI EKLE
@@ -71,8 +218,3 @@ INSERT INTO players (name, pos, role, overall, value, pac, pys, drb, pas, sho, d
   ('Samet A. DAL', 'KLC', 'keeper', 69, 9, 50, 50, 50, 50, 50, 50, 65, 65, 70, 68, 70, 73, 0, 0, 2, '[6.5,5.2]')
 ON CONFLICT DO NOTHING;
 
--- Admin kullanıcısını ekle (eğer yoksa)
-INSERT INTO users (username, password_hash, is_admin) 
-VALUES ('admin', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 1)
-ON CONFLICT (username) DO NOTHING;
--- Şifre: 1234 (SHA256 hash ile)
