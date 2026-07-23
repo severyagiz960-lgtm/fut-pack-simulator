@@ -169,12 +169,48 @@
 
 <script>
 const API = { credentials: 'include' };
-async function fetchMe(){const r=await fetch('/api/me',API).catch(()=>null);if(!r)return null;return r.json().catch(()=>null);}
-async function loginAs(u,p){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p}),credentials:'include'});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d?.message||'Giriş başarısız');return d;}
+const ADMIN_AUTH_KEY = '10BTV_admin_auth';
 
-// LocalStorage fallback: admin girişi
-function localAdminLogin(username, password) {
-  return username === 'admin' && password === '1234';
+async function fetchMe(){
+  // Önce localStorage'da admin girişi var mı kontrol et
+  if(localStorage.getItem(ADMIN_AUTH_KEY) === 'true'){
+    return { ok: true, username: 'admin', isAdmin: true };
+  }
+  // API'den dene
+  const r=await fetch('/api/me',API).catch(()=>null);
+  if(!r)return null;
+  const data = await r.json().catch(()=>null);
+  if(data && data.ok && data.isAdmin){
+    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    return data;
+  }
+  return data;
+}
+
+async function loginAs(u,p){
+  // ÖNCE: localStorage admin girişi dene
+  if(u === 'admin' && p === '1234'){
+    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    return { ok: true, username: 'admin', isAdmin: true };
+  }
+  // API'den dene
+  const r=await fetch('/api/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:u,password:p}),
+    credentials:'include'
+  }).catch(()=>null);
+  if(!r){throw new Error('Sunucuya bağlanılamadı');}
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok)throw new Error(d?.message||'Giriş başarısız');
+  if(d.isAdmin) localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+  return d;
+}
+
+// Çıkış
+async function logout(){
+  localStorage.removeItem(ADMIN_AUTH_KEY);
+  await fetch('/api/logout', {method:'POST', credentials:'include'}).catch(()=>{});
 }
 
 // Elements
@@ -200,15 +236,8 @@ adminLoginBtn.onclick=async()=>{
     loadUsers();
     loadPlayers();
   }catch(e){
-    // API başarısız olursa localStorage fallback dene
-    if(localAdminLogin(u,p)){
-      setGateStatus('Başarılı (yerel).','ok');
-      closeGate();
-      loadUsers();
-      loadPlayers();
-    }else{
-      setGateStatus(e.message||'Hata','error');
-    }
+    // loginAs zaten localStorage'u dener, buraya sadece hata durumu düşer
+    setGateStatus(e.message||'Giriş başarısız','error');
   }
 };
 adminPassEl.onkeydown=e=>{if(e.key==='Enter')adminLoginBtn.click();};
@@ -270,11 +299,13 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
       });
       tbody.querySelectorAll('button[data-add-coins]').forEach(b=>b.onclick=async()=>{
         const id=b.getAttribute('data-add-coins');
+        const input=document.getElementById('coin_input_'+id);
+        const amount=parseInt(input?.value||'100',10)||100;
         b.disabled=true;
-        const oldText = b.textContent;
+        const oldText=b.textContent;
         b.textContent='⏳';
         try{
-          const r=await fetch(`/api/admin/users/${id}/add-coins`,{method:'POST',credentials:'include'});
+          const r=await fetch(`/api/admin/users/${id}/add-coins`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount}),credentials:'include'});
           const d=await r.json();
           if(!r.ok||!d.ok)throw new Error(d?.message);
           setStatus(userStatus,`✅ Kullanıcıya ${amount} Altın eklendi.`,'ok');
